@@ -1,0 +1,31 @@
+{
+  "name": "temporaryFiles",
+  "version": "0.0.1",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "Lenard Frommelt lenard.frommelt@gne.or.at",
+  "license": "Unlicense",
+  "bin": {
+    "temporaryFiles": "./index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://.git"
+  },
+  "bugs": {
+    "url": "https://"
+  },
+  "homepage": "https://",
+  "dependencies": {
+    "chalk": "^2.4.2",
+    "clear": "0.1.0",
+    "clui": "^0.3.6",
+    "figlet": "^1.2.4",
+    "inquirer": "^7.0.0",
+    "meow": "^5.0.0"
+  }
+}
