@@ -51,7 +51,6 @@ extractEndpointDefinition = (slice) ->
     if requestDefinitionEnd < 0 then throw new Error("File Corrupt! Expected '```' to end request definition!")
 
 
-
     responseIndex = slice.indexOf(responseKey, requestDefinitionEnd)
     if responseIndex < 0 then throw new Error("File Corrupt! Expected '#### response' definition in route slice!")
     responseIndex += responseKey.length
