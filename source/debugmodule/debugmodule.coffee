@@ -9,7 +9,7 @@ debugmodule.modulesToDebug =
     unbreaker: true
     # cliargumentsmodule: true
     # configmodule: true
-    # mainprocessmodule: true
+    mainprocessmodule: true
     # startupmodule: true
     
 module.exports = debugmodule
