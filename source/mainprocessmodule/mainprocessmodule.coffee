@@ -9,21 +9,25 @@ ostr = (o) -> JSON.stringify(o, null, 4)
 print = (arg) -> console.log(arg)
 #endregion
 
-##############################################################################
+############################################################
 #region modulesFromEnvironment
 path = require("path")
 fs = require("fs")
 
+############################################################
+HJSON = require("hjson")
+
+############################################################
 cfg = null
 #endregion
 
-##############################################################################
+############################################################
 mainprocessmodule.initialize = () ->
     log "mainprocessmodule.initialize"
     cfg = allModules.configmodule
     return 
 
-##############################################################################
+############################################################
 #region internalFunctions
 extractEndpointDefinition = (slice) ->
     routeDetect = /^[a-z0-9]+/i
@@ -60,16 +64,18 @@ extractEndpointDefinition = (slice) ->
     if responseDefinitionEnd < 0 then throw new Error("File Corrupt! Expected '```' to end response definition!")
 
 
-    requestDefinition = slice.slice(requestDefinitionStart, requestDefinitionEnd)
-    log requestDefinition
-    responseDefinition = slice.slice(responseDefinitionStart, responseDefinitionEnd)
-    log responseDefinition
+    requestDefinitionString = slice.slice(requestDefinitionStart, requestDefinitionEnd)
+    requestDefinition = HJSON.parse(requestDefinitionString)
+    olog requestDefinition
+
+    responseDefinitionString = slice.slice(responseDefinitionStart, responseDefinitionEnd)
+    # responseDefinition = JSON.parse(responseDefinitionString)
 
     return
 
 #endregion
 
-##############################################################################
+############################################################
 #region exposedFunctions
 mainprocessmodule.execute = (e) ->
     log "mainprocessmodule.execute"

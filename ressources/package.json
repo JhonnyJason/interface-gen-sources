@@ -10,18 +10,19 @@
   "author": "Lenard Frommelt lenard.frommelt@gne.or.at",
   "license": "Unlicense",
   "bin": {
-    "temporaryFiles": "./index.js"
+    "interface-gen": "./index.js"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://.git"
+    "url": "git+https://github.com/JhonnyJason/interface-gen.git"
   },
   "bugs": {
-    "url": "https://"
+    "url": "https://github.com/JhonnyJason/interface-gen/issues"
   },
-  "homepage": "https://",
+  "homepage": "https://github.com/JhonnyJason/interface-gen-output#readme",
   "dependencies": {
     "chalk": "^2.4.2",
+    "hjson": "^3.2.2",
     "meow": "^5.0.0"
   }
 }
