@@ -1,31 +1,34 @@
 cliargumentsmodule = {name: "cliargumentsmodule"}
-
-#region node_modules
-meow = require("meow")
-#endregion
-
 #region logPrintFunctions
 log = (arg) ->
     if allModules.debugmodule.modulesToDebug["cliargumentsmodule"]?  then console.log "[cliargumentsmodule]: " + arg
     return
 #endregion
+
+##############################################################
+#region node_modules
+meow = require("meow")
+#endregion
+
 ##############################################################
 cliargumentsmodule.initialize = () ->
     log "cliargumentsmodule.initialize"
     return
 
+##############################################################
 #region internal functions
 getHelpText = ->
     log "getHelpText"
     return """
         Usage
-            $ 
+            $ interface-gen <arg1>
     
         Options
-            optional:
+            required:
+                arg1, --source <path/to/source>, -s <path/to/source>
                 
         Examples
-            $  -c
+            $  interface-gen definition.md
             ...
     """
 
@@ -33,27 +36,32 @@ getOptions = ->
     log "getOptions"
     return {
         flags:
-            option: #optionsname
-                type: "boolean" # or string
-                alias: "o"
+            source: 
+                type: "string" # or string
+                alias: "s"
     }
 
 extractMeowed = (meowed) ->
     log "extractMeowed"
+    source = ""
+    if meowed.input[0] then source = meowed.input[0]
+    if meowed.flags.source then source = meowed.flags.source
+    return {source}
 
-    option = false
-    if meowed.flags.option then option = true
-
-    return {option}
-
+throwErrorOnUsageFail = (extract) ->
+    log "throwErrorOnUsageFail"
+    if !extract.source then throw new Error("Usag error: no source has been defined!")
+    if !(typeof extract.source == "string") then throw new Error("Usage error: defined source is not a string!")    
+    return
 #endregion
 
+##############################################################
 #region exposed functions
 cliargumentsmodule.extractArguments = ->
     log "cliargumentsmodule.extractArguments"
-    options = getOptions()
     meowed = meow(getHelpText(), getOptions())
     extract = extractMeowed(meowed)
+    throwErrorOnUsageFail(extract)
     return extract
 
 #endregion exposed functions

@@ -1,9 +1,4 @@
 mainprocessmodule = {name: "mainprocessmodule"}
-
-#region modulesFromEnvironment
-cfg = null
-#endregion
-
 #region logPrintFunctions
 ##############################################################################
 log = (arg) ->
@@ -13,18 +8,28 @@ olog = (o) -> log "\n" + ostr(o)
 ostr = (o) -> JSON.stringify(o, null, 4)
 print = (arg) -> console.log(arg)
 #endregion
+
+##############################################################################
+#region modulesFromEnvironment
+cfg = null
+#endregion
+
 ##############################################################################
 mainprocessmodule.initialize = () ->
     log "mainprocessmodule.initialize"
     cfg = allModules.configmodule
     return 
 
+##############################################################################
 #region internalFunctions
 #endregion
 
+##############################################################################
 #region exposedFunctions
-mainprocessmodule.execute = () ->
+mainprocessmodule.execute = (e) ->
     log "mainprocessmodule.execute"
+    src = e.source
+    log src
     return
 #endregion
 

@@ -2,7 +2,7 @@ configmodule = {name: "configmodule"}
 
 #region exposedProperties
 configmodule.cli =
-    name: ""
+    name: "interface-gen"
 #endregion
 
 #region logPrintFunctions

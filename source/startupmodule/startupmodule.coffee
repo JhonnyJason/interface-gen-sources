@@ -34,16 +34,6 @@ startupmodule.initialize = () ->
     cliArguments = allModules.cliargumentsmodule
     return
 
-#region internalFunctions
-printBanner = ->
-    clear()
-    print(
-        chalk.green(
-            figlet.textSync(cfg.cli.name, { horizontalLayout: 'full' })
-        )
-    )
-#endregion
-
 #region exposedFunctions
 startupmodule.cliStartup = ->
     log "startupmodule.cliStartup"
