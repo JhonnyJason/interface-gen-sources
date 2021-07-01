@@ -4,6 +4,9 @@ Modules =
     debugmodule: require "./debugmodule"
     definitionfilemodule: require "./definitionfilemodule"
     mainprocessmodule: require "./mainprocessmodule"
+    networkinterfacemodule: require "./networkinterfacemodule"
+    pathmodule: require "./pathmodule"
+    scifilesmodule: require "./scifilesmodule"
     startupmodule: require "./startupmodule"
 
 module.exports = Modules

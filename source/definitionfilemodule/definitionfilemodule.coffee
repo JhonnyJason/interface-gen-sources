@@ -11,14 +11,13 @@ print = (arg) -> console.log(arg)
 
 ############################################################
 #region modulesFromEnvironment
-path = require("path")
 fs = require("fs")
 HJSON = require("hjson")
 
 ############################################################
-absolutePath = ""
-dirname = ""
-filename = ""
+p = null
+
+############################################################
 file = ""
 slices = []
 
@@ -39,24 +38,11 @@ definitionEndKey = "```"
 ############################################################
 definitionfilemodule.initialize = () ->
     log "definitionfilemodule.initialize"
+    p = allModules.pathmodule
     return
     
 ############################################################
 #region internalFunctions
-getPathData = (source) ->
-    absolutePath = path.resolve(source) 
-    dirname = path.dirname(absolutePath)
-    filename = path.basename(absolutePath)
-    
-    log "- - -"
-    log absolutePath
-    log dirname
-    log filename
-    log "= = ="
-
-    return
-
-############################################################
 sliceFile = ->
     index = file.indexOf(routeKey)
     
@@ -117,15 +103,17 @@ extractFromSlice = (slice) ->
 ############################################################
 #region exposedFunctions
 definitionfilemodule.digestFile = (source) ->
-    getPathData(source)
+    p.digestPath(source)
     
-    file = fs.readFileSync(absolutePath, 'utf8')
+    file = fs.readFileSync(p.absolutePath, 'utf8')
     
     sliceFile()
     extractInterface()
     return
 
+############################################################
 definitionfilemodule.interfaceObject = interfaceObject
+
 #endregion 
 
 module.exports = definitionfilemodule

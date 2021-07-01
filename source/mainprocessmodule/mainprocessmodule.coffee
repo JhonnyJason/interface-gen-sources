@@ -11,6 +11,7 @@ print = (arg) -> console.log(arg)
 
 ############################################################
 #region modulesFromEnvironment
+p = null
 cfg = null
 definitionFile = null
 networkInterface = null
@@ -21,6 +22,7 @@ sciFiles = null
 ############################################################
 mainprocessmodule.initialize = ->
     log "mainprocessmodule.initialize"
+    p = allModules.pathmodule
     cfg = allModules.configmodule
     definitionFile = allModules.definitionfilemodule
     networkInterface = allModules.networkinterfacemodule
@@ -35,16 +37,11 @@ mainprocessmodule.execute = (e) ->
     definitionFile.digestFile(e.source)
 
     interfaceObject = definitionFile.interfaceObject
-    olog interfaceObject
-
-    throw "death on purpose!"
-
-    log "- - -"
-    log e.name
-    log "= = ="
-
-    networkInterface.writeFile(interfaceObject, e.name)
-    sciFiles.writeFiles(interfaceObject, e.name)
+    if e.name? then name = e.name
+    else name = p.basename
+    
+    networkInterface.writeFile(interfaceObject, name)
+    sciFiles.writeFiles(interfaceObject, name)
     return
 
 #endregion
