@@ -103,9 +103,15 @@ addRoute = (routeName, requestArgs, sampleResponse) ->
     routeObject =
         route: routeName
         args: requestArgs.join(", ")
-        # response: sampleResponse
+        argsBlock: createArgsBlock(requestArgs)
+        response: sampleResponse
     interfaceObject.routes.push(routeObject) 
     return
+
+############################################################
+createArgsBlock = (argsArray) ->
+    return argsArray.map( (el) -> "req.body."+el ).join(", ")
+
 #endregion
 
 ############################################################
