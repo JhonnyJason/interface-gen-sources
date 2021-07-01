@@ -2,7 +2,8 @@ Modules =
     cliargumentsmodule: require "./cliargumentsmodule"
     configmodule: require "./configmodule"
     debugmodule: require "./debugmodule"
+    definitionfilemodule: require "./definitionfilemodule"
     mainprocessmodule: require "./mainprocessmodule"
     startupmodule: require "./startupmodule"
-    
+
 module.exports = Modules
