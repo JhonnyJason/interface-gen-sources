@@ -10,7 +10,30 @@ print = (arg) -> console.log(arg)
 #endregion
 
 ############################################################
+fs = require("fs")
+M = require("mustache")
+
+############################################################
 p = null
+
+############################################################
+template = """
+{{name}} = {}
+
+############################################################
+{{#routes}}
+{{name}}.{{route}} = ({{args}}) ->
+    requestObject = { {{args}} }
+    interfaceServers = allModules.configmodule.interfaceServers
+    requestURL = interfaceServers["{{name}}"]+"/{{route}}"
+    return @postData(requestURL, requestObject)
+
+{{/routes}}
+#endregion
+
+    
+module.exports = {{name}}
+"""
 
 ############################################################
 networkinterfacemodule.initialize = ->
@@ -19,9 +42,22 @@ networkinterfacemodule.initialize = ->
     return
     
 ############################################################
+getInterfaceName = (name) ->
+    name = name.toLowerCase()
+    if name.indexOf("interface") < 0 then name = name+"interface"
+    return name
+
+############################################################
 #region exposedFunctions
 networkinterfacemodule.writeFile = (interfaceObject, name) ->
     log "networkinterfacemodule.writeFile"
+    name = getInterfaceName(name)
+    interfaceObject.name = name
+
+    interfaceFile = M.render(template, interfaceObject)
+    
+    filePath = p.getFilePath(name+".coffee")
+    fs.writeFileSync(filePath, interfaceFile)
     return
 
 #endregion

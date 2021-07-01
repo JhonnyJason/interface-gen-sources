@@ -22,7 +22,7 @@ file = ""
 slices = []
 
 ############################################################
-interfaceObject = {}
+interfaceObject = {routes:[]}
 
 ############################################################
 routeDetect = /^[a-z0-9]+/i
@@ -94,10 +94,18 @@ extractFromSlice = (slice) ->
 
     responseDefinitionString = slice.slice(responseDefinitionStart, responseDefinitionEnd)
 
-    interfaceObject[route] = Object.keys(requestDefinition)
+    addRoute(route, Object.keys(requestDefinition), responseDefinitionString)
 
     return
 
+############################################################
+addRoute = (routeName, requestArgs, sampleResponse) ->
+    routeObject =
+        route: routeName
+        args: requestArgs.join(", ")
+        # response: sampleResponse
+    interfaceObject.routes.push(routeObject) 
+    return
 #endregion
 
 ############################################################
