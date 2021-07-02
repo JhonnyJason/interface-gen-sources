@@ -63,7 +63,6 @@ extractMeowed = (meowed) ->
 throwErrorOnUsageFail = (extract) ->
     log "throwErrorOnUsageFail"
     if !extract.source then throw new Error("Usag error: no source has been defined!")
-    if !(typeof extract.source == "string") then throw new Error("Usage error: defined source is not a string!")    
     return
 #endregion
 

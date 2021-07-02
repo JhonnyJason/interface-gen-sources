@@ -1,30 +1,69 @@
-# noname - 
+# interface-gen 
 
-# Why?
+# Background
+For most client-service communication we specify an interface and then have to implement both sides.
+However every such interface should feel like a regular function call.
+So how the interface code looks like is from the specification straightforward.
+Although there appear to be projects like [swagger](https://swagger.io/) who already "fill" this gap. It seems to to a lot more I don't need and which I don't understand. So it seemed much easier to implement this than understanding how I could use their solution to my problem^^.
 
-# What?
+
+The interface-gen cli-tool will take a interface specification as the form of `my-nice-sci.md` file how I would naturally specify an interface. Then it would generate the `networkinterface` which is used by the client to communicate with the service. Also it would generate the `sciroutes` and `scihandlers`  which are the corresponding parts of the service.
 
 # How?
 Requirements
 ------------
+- [nodejs](https://nodejs.org/en/)
+- [npm](https://www.npmjs.com/)
 
 Installation
 ------------
 
+Current git version
+```sh
+npm install -g git+https://github.com/JhonnyJason/interface-gen-output.git
+```
+
+Npm Registry
+```sh
+npm install -g interface-gen
+```
 
 Usage
 -----
+```
+Usage
+    $ interface-gen <arg1> <arg2>
 
+Options
+    required:
+        arg1, --source <path/to/source>, -s <path/to/source>
+            source of the interface definition in md
+
+    optional:
+        arg2, --name <interface-name>, -n <interface-name>
+            specific interface name to be used for the generated files
+            defaults to filename of the source.
+
+Examples
+    $  interface-gen definition.md sampleinterface
+    ...
+```
 
 Current Functionality
 ---------------------
-
+- takes all the `### /route` parts as route
+- takes the corresponding `#### request` to extract the JSON speficiation, so we know the arguments
+- generates the networkinterface file as `<name>interface.coffee`
+- generates the sciroutes file as `<name>routes.coffee`
+- generates the scihandlers file as `<name>handlers.coffee`
+- does not overwrite the hanlders! only fills the gaps of missing functions
 
 ---
 
 # Further steps
 
-- ...
+- discover bugs
+- figure out potential next steps
 
 
 All sorts of inputs are welcome, thanks!
