@@ -10,8 +10,8 @@ debugmodule.modulesToDebug =
     # cliargumentsmodule: true
     # configmodule: true
     # mainprocessmodule: true
-    networkinterfacemodule: true
-    scifilesmodule: true
+    # networkinterfacemodule: true
+    # scifilesmodule: true
     # startupmodule: true
     
 module.exports = debugmodule
