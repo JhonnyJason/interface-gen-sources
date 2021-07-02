@@ -57,6 +57,7 @@ Current Functionality
 - generates the sciroutes file as `<name>routes.coffee`
 - generates the scihandlers file as `<name>handlers.coffee`
 - does not overwrite the hanlders! only fills the gaps of missing functions
+- all files will be generated in the same directory as the source file
 
 ---
 

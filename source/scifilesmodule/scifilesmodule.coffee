@@ -16,6 +16,8 @@ M = require("mustache")
 ############################################################
 p = null
 
+############################################################
+#region templates
 routesTemplate ="""
 {{#routes}}
 ############################################################
@@ -35,7 +37,7 @@ handlersTemplate ="""
 scihandlers.{{route}} = ({{args}}) ->
     result = {}
     ###
-    {{response}}
+    {{{response}}}
     ###
     return result
 
@@ -43,6 +45,9 @@ scihandlers.{{route}} = ({{args}}) ->
 {{/routes}}
 """
 
+handlerFunctionSignatureTemplate = "scihandlers.{{route}} = ({{args}}) ->"
+
+#endregion
 
 ############################################################
 scifilesmodule.initialize = ->
@@ -50,8 +55,8 @@ scifilesmodule.initialize = ->
     p = allModules.pathmodule
     return
     
-
 ############################################################
+#region internalFunctions
 getRoutesName = (name) ->
     name = name.toLowerCase()
     if name.indexOf("routes") < 0 then name = name+"routes"
@@ -62,21 +67,51 @@ getHandlersName = (name) ->
     if name.indexOf("handlers") < 0 then name = name+"handlers"
     return name
 
+############################################################
+writeRoutesFile = (interfaceObject, name) ->
+    routesName = getRoutesName(name)
+
+    routesFile = M.render(routesTemplate, interfaceObject)
+
+    routesFilePath = p.getFilePath(routesName+".coffee")
+    fs.writeFileSync(routesFilePath, routesFile)
+    return
+
+writeHandlersFile = (interfaceObject, name) ->
+    handlersName = getHandlersName(name)
+    handlersFilePath = p.getFilePath(handlersName+".coffee")
+
+    newInterfaceObject = null
+
+    try
+        oldFile = fs.readFileSync(handlersFilePath, "utf8")
+        
+        routes = getMissingRoutes(interfaceObject.routes, oldFile)
+        newInterfaceObject = {routes}
+
+        handlersFile = oldFile+M.render(handlersTemplate, newInterfaceObject)
+    catch err
+        handlersFile = M.render(handlersTemplate, interfaceObject)
+
+
+    fs.writeFileSync(handlersFilePath, handlersFile)
+    return
+
+############################################################
+getMissingRoutes = (routes, file) ->
+    missing = []
+    for route in routes
+        funSignature = M.render(handlerFunctionSignatureTemplate, route)
+        if file.indexOf(funSignature) < 0 then missing.push(route)
+    return missing
+
+#endregion
 
 ############################################################
 scifilesmodule.writeFiles = (interfaceObject, name) ->
     log "scifilesmodule.writeFiles"
-    routesName = getRoutesName(name)
-    handlersName = getHandlersName(name)
-
-    routesFile = M.render(routesTemplate, interfaceObject)
-    handlersFile = M.render(handlersTemplate, interfaceObject)
-
-    routesFilePath = p.getFilePath(routesName+".coffee")
-    fs.writeFileSync(routesFilePath, routesFile)
-
-    handlersFilePath = p.getFilePath(handlersName+".coffee")
-    fs.writeFileSync(handlersFilePath, handlersFile)
+    writeRoutesFile(interfaceObject, name)
+    writeHandlersFile(interfaceObject, name)
     return
 
 module.exports = scifilesmodule

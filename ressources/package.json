@@ -1,12 +1,12 @@
 {
-  "name": "thingy-interface-gen",
+  "name": "interface-gen",
   "version": "0.0.1",
-  "description": "Small CLI tool to generate the interface code out of a Markdown documentation.",
+  "description": "Small CLI tool to generate the interface code out of a Markdown specification document.",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": [],
+  "keywords": ["documentation", "interface generator", "coffeescript", "markdown", "thingy"],
   "author": "Lenard Frommelt lenard.frommelt@gne.or.at",
   "license": "Unlicense",
   "bin": {
