@@ -8,5 +8,6 @@ Modules =
     pathmodule: require "./pathmodule"
     scifilesmodule: require "./scifilesmodule"
     startupmodule: require "./startupmodule"
+    testingfilesmodule: require "./testingfilesmodule"
 
 module.exports = Modules

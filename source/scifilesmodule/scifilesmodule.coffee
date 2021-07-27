@@ -57,19 +57,27 @@ scifilesmodule.initialize = ->
     
 ############################################################
 #region internalFunctions
-getRoutesName = (name) ->
+getRoutesFileName = (name) ->
     name = name.toLowerCase()
+
+    l = "interface".length # get rid of "interface" postfix
+    if name.indexOf("interface") > 0 then name = name.slice(0,name.length-l)
+
     if name.indexOf("routes") < 0 then name = name+"routes"
     return name
 
-getHandlersName = (name) ->
+getHandlersFileName = (name) ->
     name = name.toLowerCase()
+
+    l = "interface".length # get rid of "interface" postfix
+    if name.indexOf("interface") > 0 then name = name.slice(0,name.length-l)
+
     if name.indexOf("handlers") < 0 then name = name+"handlers"
     return name
 
 ############################################################
 writeRoutesFile = (interfaceObject, name) ->
-    routesName = getRoutesName(name)
+    routesName = getRoutesFileName(name)
 
     routesFile = M.render(routesTemplate, interfaceObject)
 
@@ -78,7 +86,7 @@ writeRoutesFile = (interfaceObject, name) ->
     return
 
 writeHandlersFile = (interfaceObject, name) ->
-    handlersName = getHandlersName(name)
+    handlersName = getHandlersFileName(name)
     handlersFilePath = p.getFilePath(handlersName+".coffee")
 
     newInterfaceObject = null

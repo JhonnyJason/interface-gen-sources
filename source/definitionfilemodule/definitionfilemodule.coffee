@@ -103,6 +103,7 @@ addRoute = (routeName, requestArgs, sampleResponse) ->
     routeObject =
         route: routeName
         args: requestArgs.join(", ")
+        requestBlock: "\""+requestArgs.join("\": \"...\", \n\"")+"\": \"...\""
         argsBlock: createArgsBlock(requestArgs)
         response: sampleResponse
     interfaceObject.routes.push(routeObject) 
