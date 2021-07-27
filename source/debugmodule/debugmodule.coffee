@@ -13,5 +13,6 @@ debugmodule.modulesToDebug =
     # networkinterfacemodule: true
     # scifilesmodule: true
     # startupmodule: true
+    testingfilesmodule: true
     
 module.exports = debugmodule

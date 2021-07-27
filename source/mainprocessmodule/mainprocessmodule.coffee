@@ -16,7 +16,7 @@ cfg = null
 definitionFile = null
 networkInterface = null
 sciFiles = null
-
+testingFiles = null
 #endregion
 
 ############################################################
@@ -27,6 +27,7 @@ mainprocessmodule.initialize = ->
     definitionFile = allModules.definitionfilemodule
     networkInterface = allModules.networkinterfacemodule
     sciFiles = allModules.scifilesmodule
+    testingFiles = allModules.testingfilesmodule
     return 
 
 ############################################################
@@ -42,6 +43,7 @@ mainprocessmodule.execute = (e) ->
     
     networkInterface.writeFile(interfaceObject, name)
     sciFiles.writeFiles(interfaceObject, name)
+    testingFiles.writeFiles(interfaceObject, name)
     return
 
 #endregion

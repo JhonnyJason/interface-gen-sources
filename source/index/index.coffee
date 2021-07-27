@@ -1,6 +1,8 @@
-Modules = require "./allmodules"
+Modules = require("./allmodules")
 
 global.allModules = Modules
+
+console.log(JSON.stringify(Modules))
 
 run = ->
     promises = (m.initialize() for n,m of Modules)
