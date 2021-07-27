@@ -38,7 +38,6 @@ Options
     required:
         arg1, --source <path/to/source>, -s <path/to/source>
             source of the interface definition in md
-
     optional:
         arg2, --name <interface-name>, -n <interface-name>
             specific interface name to be used for the generated files
@@ -56,6 +55,8 @@ Current Functionality
 - generates the networkinterface file as `<name>interface.coffee`
 - generates the sciroutes file as `<name>routes.coffee`
 - generates the scihandlers file as `<name>handlers.coffee`
+- generates the deployrequests file as `<name>deploy.http`
+- generates the localrequests file as `<name>local.http`
 - does not overwrite the hanlders! only fills the gaps of missing functions
 - all files will be generated in the same directory as the source file
 
