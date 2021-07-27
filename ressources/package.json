@@ -1,29 +1,35 @@
 {
-  "name": "interface-gen",
-  "version": "0.0.1",
-  "description": "Small CLI tool to generate the interface code out of a Markdown specification document.",
-  "main": "index.js",
-  "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
-  },
-  "keywords": ["documentation", "interface generator", "coffeescript", "markdown", "thingy"],
-  "author": "Lenard Frommelt lenard.frommelt@gne.or.at",
-  "license": "Unlicense",
-  "bin": {
-    "interface-gen": "./index.js"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/JhonnyJason/interface-gen.git"
-  },
-  "bugs": {
-    "url": "https://github.com/JhonnyJason/interface-gen/issues"
-  },
-  "homepage": "https://github.com/JhonnyJason/interface-gen-output#readme",
-  "dependencies": {
-    "chalk": "^4.1.1",
-    "hjson": "^3.2.2",
-    "meow": "^5.0.0",
-    "mustache": "^4.2.0"
+    "name": "interface-gen",
+    "version": "0.0.2",
+    "description": "Small CLI tool to generate the interface code out of a Markdown specification document.",
+    "main": "index.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "keywords": [
+        "documentation",
+        "interface generator",
+        "coffeescript",
+        "markdown",
+        "thingy"
+    ],
+    "author": "Lenard Frommelt lenard.frommelt@gne.or.at",
+    "license": "Unlicense",
+    "bin": {
+        "interface-gen": "./index.js"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/JhonnyJason/interface-gen.git"
+    },
+    "bugs": {
+        "url": "https://github.com/JhonnyJason/interface-gen/issues"
+    },
+    "homepage": "https://github.com/JhonnyJason/interface-gen-output#readme",
+    "dependencies": {
+        "chalk": "^4.1.1",
+        "hjson": "^3.2.2",
+        "meow": "^5.0.0",
+        "mustache": "^4.2.0"
     }
 }
