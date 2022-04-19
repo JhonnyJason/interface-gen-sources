@@ -1,4 +1,3 @@
-testingfilesmodule = {name: "testingfilesmodule"}
 ############################################################
 #region printLogFunctions
 log = (arg) ->
@@ -10,8 +9,8 @@ print = (arg) -> console.log(arg)
 #endregion
 
 ############################################################
-fs = require("fs")
-M = require("mustache")
+import fs from "fs"
+import *  as M from "mustache"
 
 ############################################################
 p = null
@@ -50,8 +49,8 @@ content-type: application/json
 #endregion
 
 ############################################################
-testingfilesmodule.initialize = () ->
-    log "testingfilesmodule.initialize"
+export initialize = () ->
+    log "initialize"
     p = allModules.pathmodule
     return
 
@@ -101,10 +100,8 @@ writeDeployRequestsFile = (interfaceObject, name) ->
 #endregion
 
 ############################################################
-testingfilesmodule.writeFiles = (interfaceObject, name) ->
-    log "testingfilesmodule.writeFiles"
+export writeFiles = (interfaceObject, name) ->
+    log "writeFiles"
     writeLocalRequestsFile(interfaceObject, name)
     writeDeployRequestsFile(interfaceObject, name)
     return
-
-module.exports = testingfilesmodule

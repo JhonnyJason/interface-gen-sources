@@ -1,4 +1,3 @@
-pathmodule = {name: "pathmodule"}
 ############################################################
 #region printLogFunctions
 log = (arg) ->
@@ -10,38 +9,32 @@ print = (arg) -> console.log(arg)
 #endregion
 
 ############################################################
-path = require("path")
+import path from "path"
 
 ############################################################
-pathmodule.absolutePath = ""
-pathmodule.dirname = ""
-pathmodule.filename = ""
-pathmodule.basename = ""
+obj = {}
+obj.absolutePath = ""
+obj.dirname = ""
+obj.filename = ""
+obj.basename = ""
+
 
 ############################################################
-pathmodule.initialize = ->
-    log "pathmodule.initialize"
-    return
-
-############################################################
-#region exposedStuff
-pathmodule.digestPath = (source) ->
-    pathmodule.absolutePath = path.resolve(source) 
-    pathmodule.dirname = path.dirname(pathmodule.absolutePath)
-    pathmodule.filename = path.basename(pathmodule.absolutePath)
-    pathmodule.basename = pathmodule.filename.split(".")[0]
+export digestPath = (source) ->
+    obj.absolutePath = path.resolve(source) 
+    obj.dirname = path.dirname(pathmodule.absolutePath)
+    obj.filename = path.basename(pathmodule.absolutePath)
+    obj.basename = pathmodule.filename.split(".")[0]
 
     log "- - -"
-    log pathmodule.absolutePath
-    log pathmodule.dirname
-    log pathmodule.filename
-    log pathmodule.basename
+    log obj.absolutePath
+    log obj.dirname
+    log obj.filename
+    log obj.basename
     log "= = ="
     return
 
-pathmodule.getFilePath = (name) ->
+export getFilePath = (name) ->
     return path.resolve(pathmodule.dirname, name)
 
-#endregion
-
-module.exports = pathmodule
+export default obj

@@ -1,4 +1,3 @@
-scifilesmodule = {name: "scifilesmodule"}
 ############################################################
 #region printLogFunctions
 log = (arg) ->
@@ -10,8 +9,8 @@ print = (arg) -> console.log(arg)
 #endregion
 
 ############################################################
-fs = require("fs")
-M = require("mustache")
+import fs from "fs"
+import * as M from  "mustache"
 
 ############################################################
 p = null
@@ -19,6 +18,8 @@ p = null
 ############################################################
 #region templates
 routesTemplate ="""
+import * as h from "./{{{name}}}handlers"
+
 {{#routes}}
 ############################################################
 sciroutes.{{route}} = (req, res) ->
@@ -50,8 +51,8 @@ handlerFunctionSignatureTemplate = "scihandlers.{{route}} = ({{args}}) ->"
 #endregion
 
 ############################################################
-scifilesmodule.initialize = ->
-    log "scifilesmodule.initialize"
+export initialize = ->
+    log "initialize"
     p = allModules.pathmodule
     return
     
@@ -116,10 +117,8 @@ getMissingRoutes = (routes, file) ->
 #endregion
 
 ############################################################
-scifilesmodule.writeFiles = (interfaceObject, name) ->
-    log "scifilesmodule.writeFiles"
+export writeFiles = (interfaceObject, name) ->
+    log "writeFiles"
     writeRoutesFile(interfaceObject, name)
     writeHandlersFile(interfaceObject, name)
     return
-
-module.exports = scifilesmodule

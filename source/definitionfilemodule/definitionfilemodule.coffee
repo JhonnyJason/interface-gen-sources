@@ -1,4 +1,3 @@
-definitionfilemodule = {name: "definitionfilemodule"}
 ############################################################
 #region printLogFunctions
 log = (arg) ->
@@ -11,8 +10,8 @@ print = (arg) -> console.log(arg)
 
 ############################################################
 #region modulesFromEnvironment
-fs = require("fs")
-HJSON = require("hjson")
+import fs from "fs"
+import * as HJSON from "hjson"
 
 ############################################################
 p = null
@@ -36,8 +35,8 @@ definitionEndKey = "```"
 #endregion
 
 ############################################################
-definitionfilemodule.initialize = () ->
-    log "definitionfilemodule.initialize"
+export initialize = () ->
+    log "initialize"
     p = allModules.pathmodule
     return
     
@@ -117,7 +116,7 @@ createArgsBlock = (argsArray) ->
 
 ############################################################
 #region exposedFunctions
-definitionfilemodule.digestFile = (source) ->
+export digestFile = (source) ->
     p.digestPath(source)
     
     file = fs.readFileSync(p.absolutePath, 'utf8')
@@ -127,8 +126,6 @@ definitionfilemodule.digestFile = (source) ->
     return
 
 ############################################################
-definitionfilemodule.interfaceObject = interfaceObject
+export interfaceObject = interfaceObject
 
 #endregion 
-
-module.exports = definitionfilemodule

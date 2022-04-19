@@ -4,15 +4,17 @@
 For most client-service communication we specify an interface and then have to implement both sides.
 However every such interface should feel like a regular function call.
 So how the interface code looks like is from the specification straightforward.
-Although there appear to be projects like [swagger](https://swagger.io/) who already "fill" this gap. It seems to to a lot more I don't need and which I don't understand. So it seemed much easier to implement this than understanding how I could use their solution to my problem^^.
+Although there appear to be projects like [swagger](https://swagger.io/) who already "fill" this gap. However it seemed much easier to implement this than understanding how I could use their solution to my problem^^.
 
+# What it does
+The interface-gen cli-tool will take an interface specification in the form of `my-nice-sci.md` file - which is written how I would naturally specify an interface. Firstly it will read  all the files. This includes the `networkinterface.coffee` and the `sciroutes.coffee` and `scihandlers.coffee` 
 
-The interface-gen cli-tool will take a interface specification as the form of `my-nice-sci.md` file how I would naturally specify an interface. Then it would generate the `networkinterface` which is used by the client to communicate with the service. Also it would generate the `sciroutes` and `scihandlers`  which are the corresponding parts of the service.
+Then it would parse each
 
-# How?
+# Usage
 Requirements
 ------------
-- [nodejs](https://nodejs.org/en/)
+- [nodejs](https://nodejs.org/en/) > 14
 - [npm](https://www.npmjs.com/)
 
 Installation
@@ -28,11 +30,11 @@ Npm Registry
 npm install -g interface-gen
 ```
 
-Usage
+CLI 
 -----
 ```
 Usage
-    $ interface-gen <arg1> <arg2>
+    $ interface-gen <arg1> <arg2> <arg3>
 
 Options
     required:
@@ -42,7 +44,9 @@ Options
         arg2, --name <interface-name>, -n <interface-name>
             specific interface name to be used for the generated files
             defaults to filename of the source.
-
+        arg3, --mode <generation-mode>, -m <generation-mode>
+            mode how the interface could be generated
+            defaults to "union"
 Examples
     $  interface-gen definition.md sampleinterface
     ...
@@ -50,6 +54,8 @@ Examples
 
 Current Functionality
 ---------------------
+
+## xxinterface.md parsing
 - takes all the `### /route` parts as route
 - takes the corresponding `#### request` to extract the JSON speficiation, so we know the arguments
 - generates the networkinterface file as `<name>interface.coffee`
@@ -59,6 +65,35 @@ Current Functionality
 - generates the localrequests file as `<name>local.http`
 - does not overwrite the hanlders! only fills the gaps of missing functions
 - all files will be generated in the same directory as the source file
+
+
+## xxinterface.coffee parsing
+
+## xxroutes.coffee parsing
+
+## xxhandlers.coffee parsing
+
+
+## Operation modes
+We know 3 different Operation modes
+
+- `union` or `u`
+- `intersect-ignore` or `ii`
+- `intersect-cut` or `ic`
+
+### union - u
+- Essentially every function will be synchronized.
+- If there is a function in any of the files which do not exist in the other files, it will be added and synchronized to the other files.
+
+### intersect-ignore
+- Here only the functions which exist on all the files will be synchronized.
+- The functions which are missing in one of the files are ignored.
+
+### intersect-cut
+- Here only the functions which exist on all the files will be synchronized.
+- The functions which are missing in one of the files are removed.
+
+
 
 ---
 

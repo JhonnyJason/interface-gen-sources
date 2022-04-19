@@ -1,6 +1,5 @@
-mainprocessmodule = {name: "mainprocessmodule"}
-#region logPrintFunctions
 ##############################################################################
+#region logPrintFunctions
 log = (arg) ->
     if allModules.debugmodule.modulesToDebug["mainprocessmodule"]?  then console.log "[mainprocessmodule]: " + arg
     return
@@ -20,8 +19,8 @@ testingFiles = null
 #endregion
 
 ############################################################
-mainprocessmodule.initialize = ->
-    log "mainprocessmodule.initialize"
+export initialize = ->
+    log "initialize"
     p = allModules.pathmodule
     cfg = allModules.configmodule
     definitionFile = allModules.definitionfilemodule
@@ -31,9 +30,8 @@ mainprocessmodule.initialize = ->
     return 
 
 ############################################################
-#region exposedFunctions
-mainprocessmodule.execute = (e) ->
-    log "mainprocessmodule.execute"
+export execute = (e) ->
+    log "execute"
 
     definitionFile.digestFile(e.source)
 
@@ -46,6 +44,3 @@ mainprocessmodule.execute = (e) ->
     testingFiles.writeFiles(interfaceObject, name)
     return
 
-#endregion
-
-module.exports = mainprocessmodule

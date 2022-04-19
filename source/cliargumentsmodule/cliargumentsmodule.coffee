@@ -1,4 +1,3 @@
-cliargumentsmodule = {name: "cliargumentsmodule"}
 #region logPrintFunctions
 log = (arg) ->
     if allModules.debugmodule.modulesToDebug["cliargumentsmodule"]?  then console.log "[cliargumentsmodule]: " + arg
@@ -6,14 +5,7 @@ log = (arg) ->
 #endregion
 
 ##############################################################
-#region node_modules
-meow = require('meow')
-#endregion
-
-##############################################################
-cliargumentsmodule.initialize = () ->
-    log "cliargumentsmodule.initialize"
-    return
+import meow from 'meow'
 
 ##############################################################
 #region internal functions
@@ -67,14 +59,10 @@ throwErrorOnUsageFail = (extract) ->
 #endregion
 
 ##############################################################
-#region exposed functions
-cliargumentsmodule.extractArguments = ->
-    log "cliargumentsmodule.extractArguments"
+export extractArguments = ->
+    log "extractArguments"
     meowed = meow(getHelpText(), getOptions())
     extract = extractMeowed(meowed)
     throwErrorOnUsageFail(extract)
     return extract
 
-#endregion exposed functions
-
-module.exports = cliargumentsmodule

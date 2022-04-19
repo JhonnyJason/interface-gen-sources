@@ -1,4 +1,3 @@
-networkinterfacemodule = {name: "networkinterfacemodule"}
 ############################################################
 #region printLogFunctions
 log = (arg) ->
@@ -10,34 +9,33 @@ print = (arg) -> console.log(arg)
 #endregion
 
 ############################################################
-fs = require("fs")
-M = require("mustache")
+import fs from "fs"
+import * as M from "mustache"
 
 ############################################################
 p = null
 
 ############################################################
+#region templates
 template = """
-{{name}} = {}
+import { postData } from "thingy-network-base"
 
 ############################################################
+#region routes
 {{#routes}}
-{{name}}.{{route}} = ({{args}}) ->
+export {{route}} = (sciURL, {{args}}) ->
     requestObject = { {{args}} }
-    interfaceServers = allModules.configmodule.interfaceServers
-    requestURL = interfaceServers["{{name}}"]+"/{{route}}"
-    return @postData(requestURL, requestObject)
+    requestURL = sciURL+"/{{route}}"
+    return postData(requestURL, requestObject)
 
 {{/routes}}
 #endregion
-
-    
-module.exports = {{name}}
 """
+#endregion
 
 ############################################################
-networkinterfacemodule.initialize = ->
-    log "networkinterfacemodule.initialize"
+export initialize = ->
+    log "initialize"
     p = allModules.pathmodule
     return
     
@@ -48,9 +46,8 @@ getInterfaceName = (name) ->
     return name
 
 ############################################################
-#region exposedFunctions
-networkinterfacemodule.writeFile = (interfaceObject, name) ->
-    log "networkinterfacemodule.writeFile"
+export writeFile = (interfaceObject, name) ->
+    log "writeFile"
     name = getInterfaceName(name)
     interfaceObject.name = name
 
@@ -59,7 +56,3 @@ networkinterfacemodule.writeFile = (interfaceObject, name) ->
     filePath = p.getFilePath(name+".coffee")
     fs.writeFileSync(filePath, interfaceFile)
     return
-
-#endregion
-
-module.exports = networkinterfacemodule
