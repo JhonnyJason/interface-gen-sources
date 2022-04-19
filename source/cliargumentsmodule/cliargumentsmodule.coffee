@@ -1,7 +1,11 @@
+##############################################################
 #region logPrintFunctions
 log = (arg) ->
     if allModules.debugmodule.modulesToDebug["cliargumentsmodule"]?  then console.log "[cliargumentsmodule]: " + arg
     return
+ostr = (obj) -> JSON.stringify(obj, null, 4)
+olog = (obj) -> log "\n" + ostr(obj)
+print = (arg) -> console.log(arg)
 #endregion
 
 ##############################################################
@@ -33,6 +37,7 @@ getHelpText = ->
 getOptions = ->
     log "getOptions"
     return {
+        importMeta: import.meta,
         flags:
             source:
                 type: "string" # or string

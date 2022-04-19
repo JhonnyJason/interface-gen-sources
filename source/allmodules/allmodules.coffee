@@ -1,13 +1,13 @@
-import * as cliargumentsmodule from "./cliargumentsmodule"
-import * as configmodule from "./configmodule"
-import * as debugmodule from "./debugmodule"
-import * as definitionfilemodule from "./definitionfilemodule"
-import * as mainprocessmodule from "./mainprocessmodule"
-import * as networkinterfacemodule from "./networkinterfacemodule"
-import * as pathmodule from "./pathmodule"
-import * as scifilesmodule from "./scifilesmodule"
-import * as startupmodule from "./startupmodule"
-import * as testingfilesmodule from "./testingfilesmodule"
+import * as cliargumentsmodule from "./cliargumentsmodule.js"
+import * as configmodule from "./configmodule.js"
+import * as debugmodule from "./debugmodule.js"
+import * as definitionfilemodule from "./definitionfilemodule.js"
+import * as mainprocessmodule from "./mainprocessmodule.js"
+import * as networkinterfacemodule from "./networkinterfacemodule.js"
+import * as pathmodule from "./pathmodule.js"
+import * as scifilesmodule from "./scifilesmodule.js"
+import * as startupmodule from "./startupmodule.js"
+import * as testingfilesmodule from "./testingfilesmodule.js"
 
 Modules = {
     cliargumentsmodule,
