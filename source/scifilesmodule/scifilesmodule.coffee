@@ -1,19 +1,19 @@
-############################################################
-#region printLogFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["scifilesmodule"]?  then console.log "[scifilesmodule]: " + arg
-    return
-ostr = (obj) -> JSON.stringify(obj, null, 4)
-olog = (obj) -> log "\n" + ostr(obj)
-print = (arg) -> console.log(arg)
+##############################################################################
+#region debug
+import {createLogFunctions} from "thingy-debug"
+{log, olog} = createLogFunctions("scifilesmodule")
+
 #endregion
 
 ############################################################
+#region imports
 import fs from "fs"
 import M from  "mustache"
 
 ############################################################
-p = null
+import  * as p from "./pathmodule.js"
+
+#endregion
 
 ############################################################
 #region templates
@@ -50,12 +50,6 @@ handlerFunctionSignatureTemplate = "scihandlers.{{route}} = ({{args}}) ->"
 
 #endregion
 
-############################################################
-export initialize = ->
-    log "initialize"
-    p = allModules.pathmodule
-    return
-    
 ############################################################
 #region internalFunctions
 getRoutesFileName = (name) ->

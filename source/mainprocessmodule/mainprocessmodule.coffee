@@ -1,46 +1,32 @@
 ##############################################################################
-#region logPrintFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["mainprocessmodule"]?  then console.log "[mainprocessmodule]: " + arg
-    return
-olog = (o) -> log "\n" + ostr(o)
-ostr = (o) -> JSON.stringify(o, null, 4)
-print = (arg) -> console.log(arg)
+#region debug
+import {createLogFunctions} from "thingy-debug"
+{log, olog} = createLogFunctions("mainprocessmodule")
+
 #endregion
 
-############################################################
-#region modulesFromEnvironment
-p = null
-cfg = null
-definitionFile = null
-networkInterface = null
-sciFiles = null
-testingFiles = null
-#endregion
 
 ############################################################
-export initialize = ->
-    log "initialize"
-    p = allModules.pathmodule
-    cfg = allModules.configmodule
-    definitionFile = allModules.definitionfilemodule
-    networkInterface = allModules.networkinterfacemodule
-    sciFiles = allModules.scifilesmodule
-    testingFiles = allModules.testingfilesmodule
-    return 
+#region imports
+import * as p from "./pathmodule.js"
+import * as df from "./definitionfilemodule.js"
+import * as ni from "./networkinterfacemodule.js"
+import * as sf from "./scifilesmodule.js"
+import * as tf from "./testingfilesmodule.js"
+#endregion
 
 ############################################################
 export execute = (e) ->
     log "execute"
 
-    definitionFile.digestFile(e.source)
+    df.digestFile(e.source)
 
-    interfaceObject = definitionFile.interfaceObject
+    interfaceObject = df.interfaceObject
     if e.name? then name = e.name
     else name = p.basename
     
-    networkInterface.writeFile(interfaceObject, name)
-    sciFiles.writeFiles(interfaceObject, name)
-    testingFiles.writeFiles(interfaceObject, name)
+    ni.writeFile(interfaceObject, name)
+    sf.writeFiles(interfaceObject, name)
+    tf.writeFiles(interfaceObject, name)
     return
 

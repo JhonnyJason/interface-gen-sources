@@ -1,11 +1,8 @@
-############################################################
-#region printLogFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["definitionfilemodule"]?  then console.log "[definitionfilemodule]: " + arg
-    return
-ostr = (obj) -> JSON.stringify(obj, null, 4)
-olog = (obj) -> log "\n" + ostr(obj)
-print = (arg) -> console.log(arg)
+##############################################################################
+#region debug
+import {createLogFunctions} from "thingy-debug"
+{log, olog} = createLogFunctions("definitionfilemodule")
+
 #endregion
 
 ############################################################
@@ -14,7 +11,9 @@ import fs from "fs"
 import * as HJSON from "hjson"
 
 ############################################################
-p = null
+import *  as p from "./pathmodule.js"
+
+#endregion
 
 ############################################################
 file = ""
@@ -24,8 +23,10 @@ slices = []
 interfaceObject = {routes:[]}
 
 ############################################################
+#region patterns
 routeDetect = /^[a-z0-9]+/i
 
+############################################################
 routeKey = "### /"
 requestKey = "#### request"
 responseKey = "#### response"
@@ -33,12 +34,6 @@ definitionStartKey = "```json"
 definitionEndKey = "```"
 
 #endregion
-
-############################################################
-export initialize = () ->
-    log "initialize"
-    p = allModules.pathmodule
-    return
     
 ############################################################
 #region internalFunctions

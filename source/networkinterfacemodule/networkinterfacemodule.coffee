@@ -1,19 +1,19 @@
-############################################################
-#region printLogFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["networkinterfacemodule"]?  then console.log "[networkinterfacemodule]: " + arg
-    return
-ostr = (obj) -> JSON.stringify(obj, null, 4)
-olog = (obj) -> log "\n" + ostr(obj)
-print = (arg) -> console.log(arg)
+##############################################################################
+#region debug
+import {createLogFunctions} from "thingy-debug"
+{log, olog} = createLogFunctions("networkinterfacemodule")
+
 #endregion
 
 ############################################################
+#region imports
 import fs from "fs"
 import M from "mustache"
 
 ############################################################
-p = null
+import *  as p from "./pathmodule.js"
+
+#endregion
 
 ############################################################
 #region templates
@@ -33,12 +33,6 @@ export {{route}} = (sciURL, {{args}}) ->
 """
 #endregion
 
-############################################################
-export initialize = ->
-    log "initialize"
-    p = allModules.pathmodule
-    return
-    
 ############################################################
 getInterfaceName = (name) ->
     name = name.toLowerCase()

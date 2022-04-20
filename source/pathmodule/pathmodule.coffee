@@ -1,11 +1,8 @@
-############################################################
-#region printLogFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["pathmodule"]?  then console.log "[pathmodule]: " + arg
-    return
-ostr = (obj) -> JSON.stringify(obj, null, 4)
-olog = (obj) -> log "\n" + ostr(obj)
-print = (arg) -> console.log(arg)
+##############################################################################
+#region debug
+import {createLogFunctions} from "thingy-debug"
+{log, olog} = createLogFunctions("pathmodule")
+
 #endregion
 
 ############################################################
@@ -21,20 +18,20 @@ obj.basename = ""
 
 ############################################################
 export digestPath = (source) ->
-    obj.absolutePath = path.resolve(source) 
-    obj.dirname = path.dirname(pathmodule.absolutePath)
-    obj.filename = path.basename(pathmodule.absolutePath)
-    obj.basename = pathmodule.filename.split(".")[0]
+    log "digestPath"
+    log source
 
-    log "- - -"
-    log obj.absolutePath
-    log obj.dirname
-    log obj.filename
-    log obj.basename
-    log "= = ="
+    obj.absolutePath = path.resolve(source) 
+    obj.dirname = path.dirname(obj.absolutePath)
+    obj.filename = path.basename(obj.absolutePath)
+    obj.basename = obj.filename.split(".")[0]
+
+    olog obj
+
     return
 
 export getFilePath = (name) ->
-    return path.resolve(pathmodule.dirname, name)
+    return path.resolve(obj.dirname, name)
 
+############################################################
 export default obj

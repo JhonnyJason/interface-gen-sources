@@ -1,5 +1,4 @@
-#!/bin/bash
-##
+#!/bin/bashW
 cp sources/ressources/.gitignore output/.gitignore
 cp sources/ressources/LICENSE output/LICENSE
 cp sources/ressources/UNLICENSE output/UNLICENSE

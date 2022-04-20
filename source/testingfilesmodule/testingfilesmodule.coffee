@@ -1,11 +1,8 @@
-############################################################
-#region printLogFunctions
-log = (arg) ->
-    if allModules.debugmodule.modulesToDebug["testingfilesmodule"]?  then console.log "[testingfilesmodule]: " + arg
-    return
-ostr = (obj) -> JSON.stringify(obj, null, 4)
-olog = (obj) -> log "\n" + ostr(obj)
-print = (arg) -> console.log(arg)
+##############################################################################
+#region debug
+import {createLogFunctions} from "thingy-debug"
+{log, olog} = createLogFunctions("testingfilesmodule")
+
 #endregion
 
 ############################################################
@@ -13,7 +10,7 @@ import fs from "fs"
 import M from "mustache"
 
 ############################################################
-p = null
+import * as p from "./pathmodule.js"
 
 ############################################################
 #region templates
@@ -47,12 +44,6 @@ content-type: application/json
 """
 
 #endregion
-
-############################################################
-export initialize = () ->
-    log "initialize"
-    p = allModules.pathmodule
-    return
 
 
 ############################################################
