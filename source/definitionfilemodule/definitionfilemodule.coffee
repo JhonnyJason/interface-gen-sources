@@ -113,7 +113,9 @@ createArgsBlock = (argsArray) ->
 #region exposedFunctions
 export digestFile = (source) ->
     p.digestPath(source)
-    
+
+    olog p
+        
     file = fs.readFileSync(p.absolutePath, 'utf8')
     
     sliceFile()
