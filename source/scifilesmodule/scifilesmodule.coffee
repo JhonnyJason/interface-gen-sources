@@ -10,7 +10,7 @@ print = (arg) -> console.log(arg)
 
 ############################################################
 import fs from "fs"
-import * as M from  "mustache"
+import M from  "mustache"
 
 ############################################################
 p = null
@@ -18,33 +18,33 @@ p = null
 ############################################################
 #region templates
 routesTemplate ="""
-import * as h from "./{{{name}}}handlers"
+    import * as h from "./{{{name}}}handlers"
 
-{{#routes}}
-############################################################
-sciroutes.{{route}} = (req, res) ->
-    try
-        response = await h.{{route}}({{argsBlock}})
-        res.send(response)
-    catch err then res.send({error: err.stack})
-    return
+    {{#routes}}
+    ############################################################
+    sciroutes.{{route}} = (req, res) ->
+        try
+            response = await h.{{route}}({{argsBlock}})
+            res.send(response)
+        catch err then res.send({error: err.stack})
+        return
 
-{{/routes}}
-"""
+    {{/routes}}
+    """
 
 handlersTemplate ="""
-{{#routes}}
-############################################################
-scihandlers.{{route}} = ({{args}}) ->
-    result = {}
-    ###
-    {{{response}}}
-    ###
-    return result
+    {{#routes}}
+    ############################################################
+    scihandlers.{{route}} = ({{args}}) ->
+        result = {}
+        ###
+        {{{response}}}
+        ###
+        return result
 
 
-{{/routes}}
-"""
+    {{/routes}}
+    """
 
 handlerFunctionSignatureTemplate = "scihandlers.{{route}} = ({{args}}) ->"
 

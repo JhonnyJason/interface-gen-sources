@@ -10,7 +10,7 @@ print = (arg) -> console.log(arg)
 
 ############################################################
 import fs from "fs"
-import *  as M from "mustache"
+import M from "mustache"
 
 ############################################################
 p = null
