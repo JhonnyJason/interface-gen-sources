@@ -1,6 +1,6 @@
 {
     "name": "interface-gen",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Small CLI tool to generate the interface code out of a Markdown specification document.",
     "main": "index.js",
     "scripts": {
