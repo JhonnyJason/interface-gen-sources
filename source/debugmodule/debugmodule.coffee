@@ -5,11 +5,11 @@ import { addModulesToDebug } from "thingy-debug"
 addModulesToDebug({
     # cliargumentsmodule: true
     # configmodule: true
-    definitionfilemodule: true
-    # mainprocessmodule: true
+    # definitionfilemodule: true
+    mainprocessmodule: true
     # networkinterfacemodule: true
-    pathmodule: true
+    pathhandlermodule: true
     # scifilesmodule: true
     # startupmodule: true
-    testingfilesmodule: true
+    # testingfilesmodule: true
 })  

@@ -1,19 +1,30 @@
-##############################################################################
+############################################################
 #region debug
-import {createLogFunctions} from "thingy-debug"
-{log, olog} = createLogFunctions("definitionfilemodule")
-
+import { createLogFunctions } from "thingy-debug"
+{log, olog} = createLogFunctions("definitionfileparser")
 #endregion
 
 ############################################################
-#region modulesFromEnvironment
+#region imports
 import fs from "fs"
 import * as HJSON from "hjson"
 
 ############################################################
-import *  as p from "./pathhandlermodule.js"
+import * as pm from "./pathhandlermodule.js"
 
 #endregion
+
+############################################################
+export class DefinitionFile
+    constructor: () -> 
+        path = pm.getDefinitionFilePath()
+        @fileString = fs.readFileSync(path, "utf-8")
+        log "constructed DefinitionFile"
+
+    parse: ->
+        log "real implementation here!"
+        sliceFile()
+        extractInterface()
 
 ############################################################
 file = ""
@@ -108,19 +119,3 @@ createArgsBlock = (argsArray) ->
     return argsArray.map( (el) -> "req.body."+el ).join(", ")
 
 #endregion
-
-############################################################
-#region exposedFunctions
-export digestFile = (source) ->
-    p.digestPath(source)
-
-    olog p
-
-    file = fs.readFileSync(p.absolutePath, 'utf8')
-    
-    return
-
-############################################################
-export interfaceObject = interfaceObject
-
-#endregion 

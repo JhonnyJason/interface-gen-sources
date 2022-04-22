@@ -8,25 +8,27 @@ import {createLogFunctions} from "thingy-debug"
 
 ############################################################
 #region imports
-import * as p from "./pathmodule.js"
-import * as df from "./definitionfilemodule.js"
-import * as ni from "./networkinterfacemodule.js"
-import * as sf from "./scifilesmodule.js"
-import * as tf from "./testingfilesmodule.js"
+import * as ph from "./pathhandlermodule.js"
+import * as fp from "./filesparsermodule.js"
 #endregion
 
 ############################################################
 export execute = (e) ->
     log "execute"
+    olog e
 
-    df.digestFile(e.source)
+    ph.createValidPaths(e.root, e.name)
+    throw new Error("Death on Purpose!")
 
-    interfaceObject = df.interfaceObject
-    if e.name? then name = e.name
-    else name = p.basename
+    fp.parseAllFiles()
+
+
+    # interfaceObject = df.interfaceObject
+    # if e.name? then name = e.name
+    # else name = p.basename
     
-    ni.writeFile(interfaceObject, name)
-    sf.writeFiles(interfaceObject, name)
-    tf.writeFiles(interfaceObject, name)
+    # ni.writeFile(interfaceObject, name)
+    # sf.writeFiles(interfaceObject, name)
+    # tf.writeFiles(interfaceObject, name)
     return
 
