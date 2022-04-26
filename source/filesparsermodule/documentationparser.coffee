@@ -1,7 +1,7 @@
 ############################################################
 #region debug
 import { createLogFunctions } from "thingy-debug"
-{log, olog} = createLogFunctions("definitionfileparser")
+{log, olog} = createLogFunctions("documentationparser")
 #endregion
 
 ############################################################
@@ -10,21 +10,39 @@ import fs from "fs"
 import * as HJSON from "hjson"
 
 ############################################################
-import * as pm from "./pathhandlermodule.js"
+import * as ph from "./pathhandlermodule.js"
+import { LinkedMap } from "./linkedmapmodule.js"
 
 #endregion
 
 ############################################################
-export class DefinitionFile
-    constructor: () -> 
-        path = pm.getDefinitionFilePath()
-        @fileString = fs.readFileSync(path, "utf-8")
-        log "constructed DefinitionFile"
+export class DocumentationFile
+    constructor: ->
+        try 
+            @data = new LinkedMap()
+            @path = ph.getDocumentationFilePath()
+            @fileString = fs.readFileSync(@path, "utf-8")
+            log "constructed DocumentationFile"
+            @exists = true
+        catch err
+            log err
+            log "documentation File not appropriately constructed!"
+            @exists = false
 
     parse: ->
+        if !@exists then throw new Error("Documentation File does not exist!")
         log "real implementation here!"
-        sliceFile()
-        extractInterface()
+        @lines = @fileString.split("\n")
+        log @lines.length
+        
+        for line,idx in @lines
+            id = ""+idx
+            cObj = { id, line }
+            @data.append(id, cObj)
+
+        log @data.size
+        return
+
 
 ############################################################
 file = ""

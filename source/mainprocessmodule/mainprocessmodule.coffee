@@ -16,11 +16,12 @@ import * as fp from "./filesparsermodule.js"
 export execute = (e) ->
     log "execute"
     olog e
-
+    
+    global.interfaceName = e.name+"interface"
     ph.createValidPaths(e.root, e.name)
-    throw new Error("Death on Purpose!")
-
     fp.parseAllFiles()
+
+    throw new Error("Death on Purpose!")
 
 
     # interfaceObject = df.interfaceObject
