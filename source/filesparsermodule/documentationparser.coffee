@@ -16,6 +16,9 @@ import { LinkedMap } from "./linkedmapmodule.js"
 #endregion
 
 ############################################################
+idCount = 0
+
+############################################################
 export class DocumentationFile
     constructor: ->
         try 
@@ -35,13 +38,28 @@ export class DocumentationFile
         @lines = @fileString.split("\n")
         log @lines.length
         
-        for line,idx in @lines
-            id = ""+idx
-            cObj = { id, line }
-            @data.append(id, cObj)
-
+        for line in @lines
+            digestNextLine(line, this)
         log @data.size
         return
+
+############################################################
+class DocumentSection
+    constructor: (@type, @id) ->
+        if !@id? then @id = ""+idCount++
+        @content = []
+
+    add: (line) -> @content.push(line)
+
+
+############################################################
+digestNextLine = (line, file) ->
+    if !file.currentSection? then file.currentSection = new DocumentSection("head")
+    # action = checkLine(line)
+    return
+
+# checkLine = (line) ->
+
 
 
 ############################################################
