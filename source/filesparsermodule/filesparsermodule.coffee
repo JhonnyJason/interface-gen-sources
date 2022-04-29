@@ -5,7 +5,7 @@ import { createLogFunctions, debugOn } from "thingy-debug"
 #endregion
 
 ############################################################
-import { DocumentationFile } from "./documentationparser.js"
+import { DocumentationFileParser } from "./documentationparser.js"
 
 ############################################################
 export initialize = ->
@@ -18,8 +18,8 @@ export initialize = ->
 export parseAllFiles = ->
     log "parseAllFiles"
     
-    documentation = new DocumentationFile()
-    if documentation.exists then documentation.parse()
+    documentationParser = new DocumentationFileParser()
+    if documentationParser.fileExists then documentationParser.parse()
     else log "No documentation file found!"
 
     
