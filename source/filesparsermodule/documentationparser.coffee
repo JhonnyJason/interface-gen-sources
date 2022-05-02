@@ -25,6 +25,18 @@ parserStates = [
     "PARSING_ROUTE",
     "PARSING_DONE"
 ]
+
+fragmentTypes = [
+    "title", # h1
+    "sectionHead", # h2
+    "routeHead", # h3
+    "requestHead", # h4 request
+    "responseHead", # h4 response
+    "jsonStart",
+    "jsonEnd", 
+    "contentLine"
+    "emptyLine",
+]
 #endregion
 
 ############################################################
@@ -50,32 +62,106 @@ export class DocumentationFileParser
         if !@fileExists then throw new Error("Documentation File does not exist!")        
         @lines = @fileString.split("\n")
         @lineCursor = 0
-        @fragments = []
+        @lineObjects = []
+
+
+        ## open Section for the whole document
+        @document = new DocumentSection()
+        openSections = [@document]
+        currentLevel = 0
+
         while @lineCursor < @lines.length
             line = @lines[@lineCursor]
-            @fragments.push(new Fragment(line, @lineCursor))
+            lineObj = new LineObject(line, @lineCursor)
+            @lineObjects.push(lineObj)
             
-            @lineCursor++
+            level = getLineTypeLevel(lineObj.type)
+            if level > currentLevel and level != 7
+                upperSection = openSections[currentLevel]
+                section = new DocumentSection(@lineCursor, lineObj.type)
+                upperSection.add(section)
+                openSections.push(section)
+                currentLevel++
+            else if level != 7
+                while level <= currentLevel
+                    upperSection = openSections[currentLevel]
+                    upperSection.close(@lineCursor)
+                    currentLevel--
+                upperSection = openSections[currentLevel]
+                section = new DocumentSection(@lineCursor, lineObj.type)
+                upperSection.add(section)
+                openSections.push(section)
+                currentLevel++
 
+            @lineCursor++
+        
+        @document.close(@lineCursor)
+        log "parsing ended!"
+        olog @document
         return
-    
+      
 ############################################################
 class DocumentSection
-    constructor: (@type, @id) ->
-        if !@type? or !@id? then throw new Error("No type or id has been provided!")
-        @content = []
+    constructor: (@start, @type) ->
+        if !@start? then @start = 0
+        @children = []
+        @open = true
 
-    add: (line) -> @content.push(line)
-    toString: -> return @content.join("\n")
+    close: (end) -> 
+        @end = end
+        @open = false
 
-class Fragment
+    add: (subSection) -> @children.push(subSection)
+
+class DocumentNode
+    constructor: (@parent, @fragment) ->
+        if !@parent?
+            @parent = null
+            @fragment = null
+            @document = this
+            @level = 0
+        else
+            parent = @parent.parent
+            @document = parent
+            @level = 1
+            while parent?
+                parent = parent.parent
+                @document = parent
+                @level++
+            
+        @fragments = []
+        @children = []
+
+    addFragment: (fragment) ->
+        switch fragment.type
+            when "jsonStart", "jsonEnd", "emptyLine", "contentLine"
+                @fragments.push(fragment)
+                return this
+            when "title", "sectionHead", "routeHead", "requestHead", "responseHead"
+                if @level > getFragmentTypeLevel(fragment.type)
+                    node = new DocumentNode(this, @document, @fragment)
+                    @children.push(node)
+
+        return 
+    
+class LineObject
     constructor: (@line, @index) ->
-        @type = getFragmentType(@line)
-        log @type
+        @type = getLineType(@line)
+    
 
 ############################################################
 #region internalFunctions
-getFragmentType = (line) ->
+getLineTypeLevel = (type) ->
+    switch type
+        when "title" then return 1
+        when "sectionHead" then return 2
+        when "routeHead" then return 3
+        when "requestHead", "responseHead" then return 4
+        else return 7
+    return
+
+
+getLineType = (line) ->
     if !contentDetect.test(line) then return "emptyLine"
     index = 0
     (index++) while line.charAt(index) == "#"
