@@ -12,30 +12,21 @@ import * as HJSON from "hjson"
 ############################################################
 import * as ph from "./pathhandlermodule.js"
 import { LinkedMap } from "./linkedmapmodule.js"
-import { createStateGuardian } from "./stateguardianmodule.js"
 
 #endregion
 
 ############################################################
 #region states
-parserStates = [
-    "PARSING_HEAD",
-    "PARSING_VERSION",
-    "PARSING_SIDENOTE",
-    "PARSING_ROUTE",
-    "PARSING_DONE"
-]
-
-fragmentTypes = [
-    "title", # h1
-    "sectionHead", # h2
-    "routeHead", # h3
-    "requestHead", # h4 request
-    "responseHead", # h4 response
-    "jsonStart",
-    "jsonEnd", 
-    "contentLine"
-    "emptyLine",
+lineTypes = [
+    "title", # level 1
+    "sectionHead", # level 2
+    "routeHead", # level 3
+    "requestHead", # level 4
+    "responseHead", # level 4
+    "jsonStart", # level 7
+    "jsonEnd",  # level 7
+    "contentLine" # level 7
+    "emptyLine", # level 7
 ]
 #endregion
 
@@ -44,9 +35,13 @@ export class DocumentationFileParser
     constructor: ->
         try
             @sectionMap = new LinkedMap()
-            @sectionIdCount = 0
             
-            @routesToId = {}
+            # headline with version
+            # comment lines
+            # section headlines
+            # route headlines
+            # request definition
+            # response definition
 
             @path = ph.getDocumentationFilePath()
             @fileString = fs.readFileSync(@path, "utf-8")
@@ -65,45 +60,62 @@ export class DocumentationFileParser
         @lineObjects = []
 
 
-        ## open Section for the whole document
-        @document = new DocumentSection()
-        openSections = [@document]
-        currentLevel = 0
-
+        ## mark Section starts and ends for the whole document
+        @document = new DocumentBlock()
+        
+        openBlocks = [@document]
+        
         while @lineCursor < @lines.length
             line = @lines[@lineCursor]
             lineObj = new LineObject(line, @lineCursor)
             @lineObjects.push(lineObj)
             
-            level = getLineTypeLevel(lineObj.type)
+            level = getLineLevel(lineObj)
+            currentLevel = openBlocks[openBlocks.length - 1].level
+
+            # 7 is no specific level - specific levels go to 4 here these are nodes. 7 are leaves.
             if level > currentLevel and level != 7
-                upperSection = openSections[currentLevel]
-                section = new DocumentSection(@lineCursor, lineObj.type)
-                upperSection.add(section)
-                openSections.push(section)
-                currentLevel++
+                # the latest open Block is above us so we add the new Block beneath
+                upperBlock = openBlocks[openBlocks.length - 1]
+                block = new DocumentBlock(@lineCursor, lineObj.type, level)
+                upperBlock.add(block)
+                openBlocks.push(block)
+                
             else if level != 7
+                # the latest open Block is not above us
                 while level <= currentLevel
-                    upperSection = openSections[currentLevel]
-                    upperSection.close(@lineCursor)
-                    currentLevel--
-                upperSection = openSections[currentLevel]
-                section = new DocumentSection(@lineCursor, lineObj.type)
-                upperSection.add(section)
-                openSections.push(section)
-                currentLevel++
+                    # closing Blocks until we reach one which is above us
+                    block = openBlocks.pop()
+                    block.close(@lineCursor)
+                    currentLevel = openBlocks[openBlocks.length - 1].level
+
+                upperBlock = openBlocks[openBlocks.length - 1]
+                block = new DocumentBlock(@lineCursor, lineObj.type, level)
+                upperBlock.add(block)
+                openBlocks.push(block)
 
             @lineCursor++
         
-        @document.close(@lineCursor)
+        # close all Open Block
+        while openBlocks.length
+            block = openBlocks.pop()
+            block.close(@lineCursor)
+
+        # create the common pieces
+        # title headline is VersionHeadline
+        # section headline is SectionSeparation
+
         log "parsing ended!"
         olog @document
         return
       
 ############################################################
-class DocumentSection
-    constructor: (@start, @type) ->
-        if !@start? then @start = 0
+class DocumentBlock
+    constructor: (@start, @type, @level) ->
+        if !@start
+            @start = 0
+            @type = "document"
+            @level = 0
         @children = []
         @open = true
 
@@ -111,55 +123,24 @@ class DocumentSection
         @end = end
         @open = false
 
-    add: (subSection) -> @children.push(subSection)
-
-class DocumentNode
-    constructor: (@parent, @fragment) ->
-        if !@parent?
-            @parent = null
-            @fragment = null
-            @document = this
-            @level = 0
-        else
-            parent = @parent.parent
-            @document = parent
-            @level = 1
-            while parent?
-                parent = parent.parent
-                @document = parent
-                @level++
-            
-        @fragments = []
-        @children = []
-
-    addFragment: (fragment) ->
-        switch fragment.type
-            when "jsonStart", "jsonEnd", "emptyLine", "contentLine"
-                @fragments.push(fragment)
-                return this
-            when "title", "sectionHead", "routeHead", "requestHead", "responseHead"
-                if @level > getFragmentTypeLevel(fragment.type)
-                    node = new DocumentNode(this, @document, @fragment)
-                    @children.push(node)
-
-        return 
+    add: (subBlock) -> @children.push(subBlock)
     
 class LineObject
     constructor: (@line, @index) ->
         @type = getLineType(@line)
-    
 
+class HeadlineObject
+    constructor: (@lineObj)    
 ############################################################
 #region internalFunctions
-getLineTypeLevel = (type) ->
-    switch type
+getLineLevel = (lineObj) ->
+    switch lineObj.type
         when "title" then return 1
         when "sectionHead" then return 2
         when "routeHead" then return 3
         when "requestHead", "responseHead" then return 4
         else return 7
     return
-
 
 getLineType = (line) ->
     if !contentDetect.test(line) then return "emptyLine"
@@ -187,7 +168,7 @@ enterParsingHeadState = (df) ->
     log "enterParsingHead"
     df.state = "PARSING_HEAD"
     id = ""+df.sectionIdCount++
-    section = new DocumentSection("head", id)
+    section = new DocumentBlock("head", id)
     df.sectionMap.appendToTail(id, section)
     df.currentSection = section
     
@@ -226,7 +207,7 @@ enterParsingVersionState = (df) ->
     log "enterParsingVersionState"
     df.state = "PARSING_VERSION"
     id = ""+df.sectionIdCount++
-    section = new DocumentSection("version", id)
+    section = new DocumentBlock("version", id)
     df.sectionMap.appendToTail(id, section)
     df.currentSection = section
     
@@ -269,7 +250,7 @@ enterParsingRouteState = (df) ->
     log "parsingRouteState"
     df.state = "PARSING_ROUTE"
     id = ""+df.sectionIdCount++
-    section = new DocumentSection("route", id)
+    section = new DocumentBlock("route", id)
     df.sectionMap.appendToTail(id, section)
     df.currentSection = section
     
