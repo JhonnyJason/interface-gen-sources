@@ -1,7 +1,7 @@
 ############################################################
 #region debug
 import { createLogFunctions } from "thingy-debug"
-{log, olog} = createLogFunctions("documentationparser")
+{log, olog} = createLogFunctions("interfaceparser")
 #endregion
 
 ############################################################
@@ -19,68 +19,68 @@ import { LinkedMap } from "./linkedmapmodule.js"
 #region patterns
 routeDetect = /^[a-z]+[a-z0-9]*/i
 versionDetect = /v\d+\.\d+\.\d+/
-sideNoteDetect = /\S+/i
 contentDetect = /\S+/i
 
 ############################################################
-routeKey = "### /"
-requestKey = "#### request"
-responseKey = "#### response"
-definitionStartKey = "```json"
-definitionEndKey = "```"
-jsonStart = "```json"
-jsonEnd = "```"
+functionKey = "export "
+separatorLineKey = "#####"
+commentKey = "# "
+sectionHeadCommentKey = "# ##"
 
+importPostLine = 'import { postData } from "thingy-network-base"'
+separatorLine = "############################################################"
 #endregion
 
 ############################################################
 #region lineTypes
 lineTypes = [
-    "title" # level 1
-    "sectionHead" # level 2
-    "routeHead" # level 3
-    "requestHead" # level 4
-    "responseHead" # level 4
-    "jsonStart" # level 7
-    "jsonEnd"  # level 7
+    "separatorLine" # level 1
+    "functionHead" # level 2
     "contentLine" # level 7
+    "commentLine" # level 7
     "emptyLine" # level 7
 ]
 
 lineToBlockTypeMap = {
-    "title": "topBlock"
-    "sectionHead": "subSection"
-    "routeHead": "routeBlock"
-    "requestHead": "requestBlock"
-    "responseHead": "responseBlock"
-    "jsonStart": "contentBlock"
-    "jsonEnd": "contentBlock"
+    "separatorLine": "sectionBlock"
+    "functionHead": "functionBlock"
     "contentLine": "contentBlock"
+    "commentLine": "commentBlock"
     "emptyLine": "emptySpaceBlock"
 }
+
 #endregion
 
 ############################################################
-export class DocumentationFileParser
+functionTemplate = """
+    export {{{routeName}}} = (sciURL, {{{args}}}) ->
+        requestObject = { {{{args}}} }
+        requestURL = sciURL+"/{{{routeName}}}"
+        return postData(requestURL, requestObject)
+    """
+
+############################################################
+export class InterfaceFileParser
     constructor: ->
         try
-            @path = ph.getDocumentationFilePath()
+            @path = ph.getInterfaceFilePath()
+            log "reading interface file from: "+@path
             @fileString = fs.readFileSync(@path, "utf-8")
-            log "constructed DocumentationFileParser"
+            log "constructed InterfaceFileParser"
             @fileExists = true
             # Block Components
-            @topBlock = null
-            @subSections = []
-            @routeBlocks = []
+            @document = null
+            @sectionBlocks = []
+            @functionBlocks = []
             @contentBlocks = []
+            @commentBlocks = []
             @emptySpaceBlocks = []
             # Common Structure Components
             @commonStructure = new LinkedMap()
             @versionHeadline = null
-            @sectionHeadlines = []
-            @routeHeadlines = []
-            @requestObjects = []
-            @responseObjects = []
+            @importPostLine = null
+            @sectionObjects = []
+            @functionObjects = []
             @commentObjects = []
             @emptySpaceObjects = []
 
@@ -88,17 +88,16 @@ export class DocumentationFileParser
 
         catch err
             log err
-            log "documentation File not appropriately constructed!"
+            log "InterfaceFileParser not appropriately constructed!"
             @fileExists = false
 
     parse: ->
-        if !@fileExists then throw new Error("Documentation File does not exist!")        
+        if !@fileExists then throw new Error("Interface File does not exist!")        
         @lines = @fileString.split("\n")
         @lineCursor = 0
         @lineObjects = []
 
-
-        ## mark Block starts and ends for the whole document
+        # mark Block starts and ends for the whole document
         @document = new DocumentBlock()
         openBlocks = [@document]
         
@@ -175,21 +174,23 @@ export class DocumentationFileParser
 
         # log "parsing ended!"
         # olog @document
-        # olog @topBlock
-        # olog @subSections
-        # olog @routeBlocks
+        # olog @sectionBlocks
+        # olog @functionBlocks
+        # olog @contentBlocks
+        # olog @commentBlocks
+        # olog @emptySpaceBlocks
         return
     
     ########################################################
     addBlock: (block) ->
         if block.parent?
-            if block.parent.type == "requestHead" or block.parent.type == "responseHead"
+            if block.parent.type == "functionBlock"
                 return
         switch block.type
-            when "topBlock" then @topBlock = block
-            when "subSection" then @subSections.push(block)
-            when "routeBlock" then @routeBlocks.push(block)
+            when "sectionBlock" then @sectionBlocks.push(block)
+            when "functionBlock" then @functionBlocks.push(block)
             when "contentBlock" then @contentBlocks.push(block)
+            when "commentBlock" then @commentBlocks.push(block)
             when "emptySpaceBlock" then @emptySpaceBlocks.push(block)
             else return
         return
@@ -205,39 +206,35 @@ export class DocumentationFileParser
         @versionHeadline = el
         all.push(el)
 
+        el = @createImportPostLine()
+        @importPostLine = el
+        all.push(el)
+
         # section headline is SectionSeparation
-        for subSection in @subSections
-            lineIndex = subSection.start
-            lineObj = @lineObjects[lineIndex]
-            el = new SectionHeadline(lineObj)
-            @sectionHeadlines.push(el)
+        for block in @sectionBlocks
+            el = @createSectionObject(block)
+            @sectionObjects.push(el)
             all.push(el)
         
         # route headline is RouteHeadline
-        for routeBlock in @routeBlocks
-            routeObj = @createRouteObject(routeBlock)
-            @routeObject.push(routeObj)
-            
-            @routeHeadlines.push(routeObj.headline)
-            all.push(routeObj.headline)
+        for block in @functionBlocks
+            routeObj = @createRouteObject(block)
+            @routeObjects.push(routeObj)
 
-            @requestObjects.push(routeObj.requestObj)
-            all.push(routeObj.requestObj)
+            @functionObjects.push(routeObj.functionObj)
+            all.push(routeObj.functionObj)
 
-            @responseObjects.push(routeObj.responseObj)
-            all.push(routeObj.responseObj)
-
-        # content Blocks
-        for contentBlock in @contentBlocks
-            el = @createCommentObject(contentBlock)
+        # comment Blocks
+        for block in @commentBlocks
+            el = @createCommentObject(block)
             continue unless el?
 
             @commentObjects.push(el)
             all.push(el)
 
         # emptySpace Blocks
-        for emptySpaceBlock in @emptySpaceBlocks
-            el = @createEmptySpaceObject(emptySpaceBlock)
+        for block in @emptySpaceBlocks
+            el = @createEmptySpaceObject(block)
             continue unless el?
 
             @emptySpaceObjects.push(el)
@@ -295,8 +292,19 @@ export class DocumentationFileParser
                 scanIndex++
 
         return new VersionHeadline()
+    
+    createImportPostLine: ->
+        log "createImportPostLine"
+        log "TODO..."
+        lineObj = @lineObjects[1]
+        return new ImportPostLine(lineObj)
 
-    createRouteObject: (routeBlock) ->
+    createSectionObject: (sectionBlock) ->
+        log "createSectionObject"
+        log "TODO..."
+        return new SectionObject(lineObj)
+
+    createRouteObject: (functionBlock) ->
         result = {}
         headlineIndex = routeBlock.start
         headlineObj = @lineObjects[headlineIndex]
@@ -310,7 +318,7 @@ export class DocumentationFileParser
             return result
         catch err then throw new Error("Error on parsing route "+result.headline.routeName+"\n"+err.message)
     
-    createRequestObject: (requestBlock) ->
+    createFunctionObject: (functionBlock) ->
         obj = new RequestObject(requestBlock)
 
         jsonLines = []
@@ -329,29 +337,8 @@ export class DocumentationFileParser
         requestJson = jsonLines.join("\n")
         obj.setDefinitionJson(requestJson)        
         return obj
-
-    createResponseObject: (responseBlock) ->
-        obj = new ResponseObject(responseBlock)
-
-        jsonLines = []
-        index = responseBlock.start + 2
-        # first line is #### request
-        # second line is ```json
-        while index < responseBlock.end - 1
-            line = @lineObjects[index].line
-            # it is not certain when we get the ```
-            # so we detect it and quit then
-            if line.indexOf(jsonEnd) == 0 then break
-            
-            jsonLines.push(line)
-            index++
-        
-        responseJson = jsonLines.join("\n")
-        obj.setDefinitionJson(responseJson)        
-
-        return obj
     
-    createCommentObject: (contentBlock) ->
+    createCommentObject: (commentBlock) ->
         switch contentBlock.parent.type
             when  "responseBlock", "requestBlock" then return null
         
@@ -385,7 +372,7 @@ class DocumentBlock
         @children = []
         @open = true
         # to debug
-        # @parent = null
+        @parent = null
 
     close: (end) -> 
         @end = end
@@ -437,8 +424,8 @@ class RouteHeadline
         # log @routeName
         # log @headlineTemplate
          
-ReqO_count = 0
-class RequestObject
+FO_count = 0
+class FunctionObject
     constructor: (@blockObj) ->
         @index = @blockObj.start
         @type = "RequestObject"
@@ -452,22 +439,6 @@ class RequestObject
             @requestArgs = Object.keys(@definitionObj)       
             # olog @requestArgs
         catch err then throw new Error("Syntax error in Request Block!") 
-
-ResO_count = 0
-class ResponseObject
-    constructor: (@blockObj) ->
-        @index = @blockObj.start
-        @type = "ResponseObject"
-        @id = @type+ResO_count++
-    
-    setDefinitionJson: (json) ->
-        @definitionJson = json
-        # log @definitionJson
-        try
-            @definitionObj = HJSON.parse(json)
-            @responseArgs = Object.keys(@definitionObj)            
-            # olog @responseArgs
-        catch err then throw new Error("Synthax error in Response Block!"+"\n->"+err.message)
 
 CO_count = 0
 class CommentObject
@@ -485,7 +456,6 @@ class CommentObject
         log @content
         log @comment
 
-
 ESO_count = 0
 class EmptySpaceObject
     constructor: (@blockObj) ->
@@ -500,34 +470,23 @@ class EmptySpaceObject
 #region internalFunctions
 getLineLevel = (lineObj) ->
     switch lineObj.type
-        when "title" then return 1
-        when "sectionHead" then return 2
-        when "routeHead" then return 3
-        when "requestHead", "responseHead" then return 4
+        when "separatorLine" then return 1
+        when "sectionHeadComment" then return 2
+        when "functionHead" then return 2
         else return 7
     return
 
 getLineType = (line) ->
     if !contentDetect.test(line) then return "emptyLine"
-    index = 0
-    (index++) while line.charAt(index) == "#"
-    if line.charAt(index) == " " then switch index
-        when 1 then return "title"
-        when 2 then return "sectionHead"
-        when 3 then return "routeHead"
-        when 4 then return requestOrResponse(line)
-        else return "contentLine" 
-    
-    if line.indexOf(jsonStart) == 0 then return "jsonStart"
-    if line.indexOf(jsonEnd) == 0 then return "jsonEnd"
+ 
+    if line.indexOf(separatorLineKey) == 0 then return "separatorLine"
+    if line.indexOf(sectionHeadCommentKey) == 0 then return "sectionHeadComment"
+    if line.indexOf(functionKey) == 0 then return "functionHead"    
+    if line.indexOf(commentKey) == 0 then return "commentLine"
+
     return "contentLine"
 
 lineToBlockType = (lineType) -> return lineToBlockTypeMap[lineType]
-
-requestOrResponse = (line) ->
-    if line.indexOf("request") > 4 then return "requestHead"
-    else if line.indexOf("response") > 4 then return "responseHead"
-    else return "contentLine"
 
 #endregion
 
