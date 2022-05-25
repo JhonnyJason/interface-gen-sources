@@ -17,18 +17,30 @@ import { LinkedMap } from "./linkedmapmodule.js"
 
 ############################################################
 #region patterns
+argsDetect = /^[a-z]+[a-z0-9]*(, *[a-z]+[a-z0-9]*)*/i
 routeDetect = /^[a-z]+[a-z0-9]*/i
 versionDetect = /v\d+\.\d+\.\d+/
 contentDetect = /\S+/i
 
 ############################################################
-functionKey = "export "
+importPostLine = 'import { postData } from "thingy-network-base"' 
+
+############################################################
 separatorLineKey = "#####"
 commentKey = "# "
+
+############################################################
+separatorLine = "############################################################"
 sectionHeadCommentKey = "# ##"
 
-importPostLine = 'import { postData } from "thingy-network-base"'
-separatorLine = "############################################################"
+############################################################
+functionKey = "export "
+functionCenter = " = (sciURL, "
+functionEnd = ") ->"
+functionBodyLine0Key = '    requestObject = { '
+functionBodyLine1Key = '    requestURL = sciURL+"/'
+functionBodyLine2 = "    return postData(requestURL, requestObject)"
+
 #endregion
 
 ############################################################
@@ -36,6 +48,7 @@ separatorLine = "############################################################"
 lineTypes = [
     "separatorLine" # level 1
     "functionHead" # level 2
+    "sectionHeadComment" # level 7
     "contentLine" # level 7
     "commentLine" # level 7
     "emptyLine" # level 7
@@ -52,12 +65,18 @@ lineToBlockTypeMap = {
 #endregion
 
 ############################################################
+#region templates
+functionHeadlineTemplate = 'export {{{routeName}}} = (sciURL, {{{args}}}) ->'
+functionBodyLine0Template = '    requestObject = { {{{args}}} }'
+functionBodyLine1Template = '    requestURL = sciURL+"/{{{routeName}}}"'
+
 functionTemplate = """
     export {{{routeName}}} = (sciURL, {{{args}}}) ->
         requestObject = { {{{args}}} }
         requestURL = sciURL+"/{{{routeName}}}"
         return postData(requestURL, requestObject)
     """
+#endregion
 
 ############################################################
 export class InterfaceFileParser
@@ -78,8 +97,8 @@ export class InterfaceFileParser
             # Common Structure Components
             @commonStructure = new LinkedMap()
             @versionHeadline = null
-            @importPostLine = null
-            @sectionObjects = []
+            @importLine = null
+            @sectionHeads = []
             @functionObjects = []
             @commentObjects = []
             @emptySpaceObjects = []
@@ -111,7 +130,7 @@ export class InterfaceFileParser
             currentBlock = openBlocks[openBlocks.length - 1]
             currentLevel = currentBlock.level
                 
-            # 7 is no specific level - specific levels go to 4 here these are nodes. 7 are leaves.
+            # 7 is no specific level - specific levels go to 2 here these are nodes. 7 are leaves.
             if level > currentLevel and level != 7
                 # the currentBlock is above us so we add the new Block beneath
                 #region addNewBlock()
@@ -186,6 +205,7 @@ export class InterfaceFileParser
         if block.parent?
             if block.parent.type == "functionBlock"
                 return
+        
         switch block.type
             when "sectionBlock" then @sectionBlocks.push(block)
             when "functionBlock" then @functionBlocks.push(block)
@@ -206,17 +226,16 @@ export class InterfaceFileParser
         @versionHeadline = el
         all.push(el)
 
-        el = @createImportPostLine()
-        @importPostLine = el
+        el = @createImportLine()
+        @importLine = el
         all.push(el)
 
-        # section headline is SectionSeparation
+        # section Head is separation line plus Section Headline Comment
         for block in @sectionBlocks
-            el = @createSectionObject(block)
-            @sectionObjects.push(el)
+            el = @createSectionHead(block)
+            @sectionHeads.push(el)
             all.push(el)
-        
-        # route headline is RouteHeadline
+        #function blocks are function headline plus Content
         for block in @functionBlocks
             routeObj = @createRouteObject(block)
             @routeObjects.push(routeObj)
@@ -224,120 +243,101 @@ export class InterfaceFileParser
             @functionObjects.push(routeObj.functionObj)
             all.push(routeObj.functionObj)
 
-        # comment Blocks
-        for block in @commentBlocks
-            el = @createCommentObject(block)
-            continue unless el?
+            olog routeObj
 
-            @commentObjects.push(el)
-            all.push(el)
+        # # comment Blocks
+        # for block in @commentBlocks
+        #     el = @createCommentObject(block)
+        #     continue unless el?
 
-        # emptySpace Blocks
-        for block in @emptySpaceBlocks
-            el = @createEmptySpaceObject(block)
-            continue unless el?
+        #     @commentObjects.push(el)
+        #     all.push(el)
 
-            @emptySpaceObjects.push(el)
-            all.push(el)
+        # # emptySpace Blocks
+        # for block in @emptySpaceBlocks
+        #     el = @createEmptySpaceObject(block)
+        #     continue unless el?
+
+        #     @emptySpaceObjects.push(el)
+        #     all.push(el)
         
-        sortComp = (elOne, elTwo) -> elOne.index - elTwo.index
+        # sortComp = (elOne, elTwo) -> elOne.index - elTwo.index
 
-        all.sort(sortComp)
+        # all.sort(sortComp)
 
-        for el in all
-            @commonStructure.appendToTail(el.id, el)
+        # for el in all
+        #     @commonStructure.appendToTail(el.id, el)
 
         return
 
-
     ########################################################
-    createVersionHeadline: ->
-        # title headline is VersionHeadline        
-        if @topBlock? 
-            titleIndex = @topBlock.start
-            titleLineObj = @lineObjects[titleIndex]
-            if versionDetect.test(titleLineObj.line) then return new VersionHeadline(titleLineObj)
-        
-        # otherwise it could be any contentLine in the head
-        if @subSections.length and @routeBlocks.length
-            sectionStart = @subSections[0].start
-            routeStart = @routeBlocks[0].start
+    getHeadEndIndex: ->
+        if @sectionBlocks.length and @functionBlocks.length
+            sectionStart = @sectionBlocks[0].start
+            functionStart = @functionBlocks[0].start
             
-            if sectionStart > routeStart then scanEnd = routeStart
-            else scanEnd = sectionStart
+            if sectionStart > functionStart then return functionStart
+            else return sectionStart
 
-            scanIndex = 0
-            while scanIndex < scanEnd
-                lineObj = @lineObjects[scanIndex]
-                if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
-                scanIndex++
+        else if @sectionBlock.length then return @sectionBlocks[0].start
 
-        else if @subSections.length
-            scanEnd = @subSections[0].start
+        else if @functionBlocks.length then return @functionBlocks[0].start
 
-            scanIndex = 0
-            while scanIndex < scanEnd
-                lineObj = @lineObjects[scanIndex]
-                if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
-                scanIndex++
+        return @document.end
 
-
-        else if @routeBlocks.length
-            scanEnd = @routeBlocks[0].start
-
-            scanIndex = 0
-            while scanIndex < scanEnd
-                lineObj = @lineObjects[scanIndex]
-                if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
-                scanIndex++
+    createVersionHeadline: ->
+        scanEnd = @getHeadEndIndex()
+        scanIndex = 0
+        while scanIndex < scanEnd
+            lineObj = @lineObjects[scanIndex]
+            if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
+            scanIndex++
+        scanIndex = 0
 
         return new VersionHeadline()
     
-    createImportPostLine: ->
-        log "createImportPostLine"
-        log "TODO..."
-        lineObj = @lineObjects[1]
-        return new ImportPostLine(lineObj)
+    createImportLine: ->
+        scanEnd = @getHeadEndIndex()
+        scanIndex = 0
+        while scanIndex < scanEnd
+            lineObj = @lineObjects[scanIndex]
+            if lineObj.line.indexOf(importPostLine) == 0 then return new ImportLine(lineObj)
+            scanIndex++
 
-    createSectionObject: (sectionBlock) ->
-        log "createSectionObject"
-        log "TODO..."
-        return new SectionObject(lineObj)
+        return new ImportLine()
+
+    createSectionHead: (sectionBlock) ->
+        separatorLine = @lineObjects[sectionBlock.start].line
+        if separatorLine.indexOf(separatorLineKey) != 0 then throw new Error("Section Block did not start with saparator line!")
+
+        sectionHead = new SectionHead(sectionBlock)
+
+        headlineObj = @lineObjects[sectionBlock.start + 1]
+        if headlineObj.type == "sectionHeadComment" then sectionHead.addHeadline(headlineObj)
+        
+        return sectionHead
 
     createRouteObject: (functionBlock) ->
-        result = {}
-        headlineIndex = routeBlock.start
-        headlineObj = @lineObjects[headlineIndex]
-        result.headline = new RouteHeadline(headlineObj)
-        for child in routeBlock.children
-            if child.type == "requestBlock" then requestBlock = child
-            if child.type == "responseBlock" then responseBlock = child
-        try
-            result.requestObj = @createRequestObject(requestBlock)
-            result.responseObj = @createResponseObject(responseBlock)
-            return result
-        catch err then throw new Error("Error on parsing route "+result.headline.routeName+"\n"+err.message)
-    
-    createFunctionObject: (functionBlock) ->
-        obj = new RequestObject(requestBlock)
+        functionObj = new FunctionObject(functionBlock)
 
-        jsonLines = []
-        index = requestBlock.start + 2
-        # first line is #### request
-        # second line is ```json
-        while index < requestBlock.end - 1
-            line = @lineObjects[index].line
-            # it is not certain when we get the ```
-            # so we detect it and quit then
-            if line.indexOf(jsonEnd) == 0 then break
-            
-            jsonLines.push(line)
-            index++
+        headlineIndex = functionBlock.start
+        headline = @lineObjects[headlineIndex].line
+        functionObj.setHeadline(headline)
         
-        requestJson = jsonLines.join("\n")
-        obj.setDefinitionJson(requestJson)        
-        return obj
-    
+        bodyStart = headlineIndex + 1
+        bodyEnd = functionBlock.end
+        index = bodyStart
+        bodyLines = []
+        while index <  bodyEnd    
+            line = @lineObjects[index].line
+            if contentDetect.test(line) then bodyLines.push(line)
+            index++
+        log bodyLines.length
+        if bodyLines.length != 3 then throw new Error("Invalid Function body size!")
+        functionObj.setBodyLines(bodyLines)
+
+        return {functionObj}
+        
     createCommentObject: (commentBlock) ->
         switch contentBlock.parent.type
             when  "responseBlock", "requestBlock" then return null
@@ -385,17 +385,29 @@ class LineObject
         @type = getLineType(@line)
 
 ############################################################
+class ImportLine
+    constructor: (@lineObj) ->
+        if @lineObj?
+            @index = @lineObj.index
+        else
+            @lineObj = null
+            @index = -1
+
+        @line = 'import { postData } from "thingy-network-base"'
+        @type = "ImportLine"
+        @id = @type # only exists once
+        
 class VersionHeadline
     constructor: (@lineObj) ->
         if @lineObj?
-            @version = @lineObj.line.match(versionDetect)
+            @version = @lineObj.line.match(versionDetect)[0]
             @lineTemplate = @lineObj.line.replace(@version, "{{{version}}}")
             @index = @lineObj.index
         else
             @version = "v0.0.0"
             @lineTemplate = "# {{{version}}}"
             @lineObj = null
-            @index = -1
+            @index = -2
 
         @type = "VersionHeadline"
         @id = @type # only exists once
@@ -404,41 +416,73 @@ class VersionHeadline
         # log @lineTemplate
 
 SH_count = 0
-class SectionHeadline
-    constructor: (@lineObj) ->
-        @headline = @lineObj.line
-        @index = @lineObj.index
-        @type = "SectionHeadline"
+class SectionHead
+    constructor: (@blockObj) ->
+        @index = @blockObj.start
+        @type = "SectionHead"
         @id = @type+SH_count++
+        @headlineTemplate = "# #\#{{{sectionName}}}"
+        @sectionName = null
 
-RH_count = 0
-class RouteHeadline
-    constructor: (@lineObj) ->
-        @index = @lineObj.index
-        @type = "RouteHeadline"
-        @id = @ŧype+RH_count++
-        routeNamePart = @lineObj.line.slice(routeKey.length) 
-        @routeName = routeNamePart.match(routeDetect)
-        @headlineTemplate = @lineObj.line.replace(@routeName, "{{{routeName}}}")
+    addHeadline: (@lineObj) ->
+        headline = @lineObj.line
+        sectionHeadNamePart = headline.slice(sectionHeadCommentKey+1)
+        @sectionName = sectionHeadNamePart.match(routeDetect)[0]
+        @headlineTemplate = headline.replace(@sectionName, "{{{sectionName}}}")
         
-        # log @routeName
-        # log @headlineTemplate
+        log headline
+        log @sectionName
+        log @headlineTemplate
          
 FO_count = 0
 class FunctionObject
     constructor: (@blockObj) ->
         @index = @blockObj.start
-        @type = "RequestObject"
-        @id = @type+ReqO_count++
+        @type = "FunctionObject"
+        @id = @type+FO_count++
     
-    setDefinitionJson: (json) ->
-        @definitionJson = json
-        # log @definitionJson
+    setHeadline: (headline) ->
+        @headline = headline
         try
-            @definitionObj = HJSON.parse(json)
-            @requestArgs = Object.keys(@definitionObj)       
-            # olog @requestArgs
-        catch err then throw new Error("Syntax error in Request Block!") 
+            if headline.indexOf(functionKey) != 0 then throw new Error("Function key missing!")
+            part = headline.slice(functionKey.length)
+            @routeName = part.match(routeDetect)[0]
+            if !@routeName then throw new Error("RouteName missing!")
+            part = part.slice(@routeName.length)
+            if part.indexOf(functionCenter) != 0 then throw new Error("Corrupt center part!")
+            part = part.slice(functionCenter.length)
+            @args = part.match(argsDetect)[0]
+            if !@args then throw new Error("args missing!")
+            part = part.slice(@args.length)
+            if part.indexOf(functionEnd) != 0 then throw new Error("Corrupt function end!")
+            part = part.slice(functionEnd.length)
+            if contentDetect.test(part) then throw new Error("Conent after function end detected!")
+            template = headline.replace(@routeName, "{{{routeName}}}")
+            template = template.replace(@args, "{{{args}}}")
+            @headlineTemplate = template
+            
+            log @routeName
+            log @args
+            log @headlineTemplate
+
+        catch err then throw new Error("Headline is corrupt!\nheadline="+headline+"\n- "+err.message)
+
+    setBodyLines: (bodyLines) ->
+        @bodyLines = bodyLines
+        line0 = @bodyLines[0]
+        line1 = @bodyLines[1]
+        line2 = @bodyLines[2]
+        try
+            if line0.indexOf(functionBodyLine0Key) != 0 then throw new Error("Body Line 0 is corrupt!")
+            if line1.indexOf(functionBodyLine1Key) != 0 then throw new Error("Body Line 1 is corrupt!")
+
+
+
+            if line2.indexOf(functionBodyLine2) != 0 then throw new Error("Body Line 2 is corrupt!")
+            line2Postfix = line2.slice(functionBodyLine2.length)
+            if contentDetect.test(line2Postfix) then throw new Error("Content after body Line 2 detected!")
+        catch err then throw new Error("Body of function is corrupt!\nheadline="+@headline+"\n- "+err.message)
+        return
 
 CO_count = 0
 class CommentObject
@@ -471,7 +515,6 @@ class EmptySpaceObject
 getLineLevel = (lineObj) ->
     switch lineObj.type
         when "separatorLine" then return 1
-        when "sectionHeadComment" then return 2
         when "functionHead" then return 2
         else return 7
     return

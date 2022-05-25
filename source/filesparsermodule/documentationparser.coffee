@@ -216,8 +216,8 @@ export class DocumentationFileParser
         # route headline is RouteHeadline
         for routeBlock in @routeBlocks
             routeObj = @createRouteObject(routeBlock)
-            @routeObject.push(routeObj)
-            
+            @routeObjects.push(routeObj)
+
             @routeHeadlines.push(routeObj.headline)
             all.push(routeObj.headline)
 
@@ -252,47 +252,37 @@ export class DocumentationFileParser
 
         return
 
-
     ########################################################
+    getHeadEndIndex: ->
+        if @subSections.length and @routeBlocks.length
+            sectionStart = @subSections[0].start
+            routeStart = @routeBlocks[0].start
+            
+            if sectionStart > routeStart then return routeStart
+            else return sectionStart
+
+        else if @subSections.length then return @subSections[0].start
+
+        else if @routeBlocks.length then return @routeBlocks[0].start
+
+        return @document.end
+
+
     createVersionHeadline: ->
         # title headline is VersionHeadline        
         if @topBlock? 
             titleIndex = @topBlock.start
             titleLineObj = @lineObjects[titleIndex]
             if versionDetect.test(titleLineObj.line) then return new VersionHeadline(titleLineObj)
-        
+
         # otherwise it could be any contentLine in the head
-        if @subSections.length and @routeBlocks.length
-            sectionStart = @subSections[0].start
-            routeStart = @routeBlocks[0].start
-            
-            if sectionStart > routeStart then scanEnd = routeStart
-            else scanEnd = sectionStart
+        scanEnd = @getHeadEndIndex()
+        scanIndex = 0
+        while scanIndex < scanEnd
+            lineObj = @lineObjects[scanIndex]
+            if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
+            scanIndex++
 
-            scanIndex = 0
-            while scanIndex < scanEnd
-                lineObj = @lineObjects[scanIndex]
-                if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
-                scanIndex++
-
-        else if @subSections.length
-            scanEnd = @subSections[0].start
-
-            scanIndex = 0
-            while scanIndex < scanEnd
-                lineObj = @lineObjects[scanIndex]
-                if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
-                scanIndex++
-
-
-        else if @routeBlocks.length
-            scanEnd = @routeBlocks[0].start
-
-            scanIndex = 0
-            while scanIndex < scanEnd
-                lineObj = @lineObjects[scanIndex]
-                if versionDetect.test(lineObj.line) then return new VersionHeadline(lineObj)
-                scanIndex++
 
         return new VersionHeadline()
 
