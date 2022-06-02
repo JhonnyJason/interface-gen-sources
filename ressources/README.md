@@ -10,14 +10,62 @@ Although there appear to be projects like [swagger](https://swagger.io/) who alr
 ## Interface Files and their Purpose
 First the interface will have it's `<name>`
 
-- Documentation File: `<name>interface.md`
-- Interface File: `<name>interface.coffee` - the client side interface
-- Routes File: `<name>routes.coffee` - the express routes
-- Handlers File: `<name>handlers.coffee`
-- Local Testing File: `<name>local.http`
-- Deploy Testing File: `<name>deploy.http`
+- Documentation File: `<name>interface.md` (master)
+- Interface File: `<name>interface.coffee` (master) - the client side interface
+- Handlers File: `<name>handlers.coffee` (master)
+- Routes File: `<name>routes.coffee` (slave) - the express routes
+- Local Testing File: `<name>local.http` (slave)
+- Deploy Testing File: `<name>deploy.http` (slave)
 
-The interface-gen cli-tool will take the interface name as required argument. Then it would parse all the existing files, generate the missing ones and synchronize the relevant changes.
+The interface-gen cli-tool will take the interface name as required argument. Then it would parse all the master files, synchronize the relevant changes and write all the files with the new contents.
+
+The important Parts to be synchronized are:
+
+- Head - title and version
+- SectionHeads - section titles and section descriptions
+- Routes - route names parameters and descriptions (are also referred to as Functions in the interface or handlers file)
+
+### The Documentation File
+The Documentation File is a Master file.
+
+Rendered as MD this is the Human Readable documentation for the Routes.
+The purpose is that people have an easier time to understand how to use the SCI.
+
+#### Structure
+TODO
+
+### The Interface File
+The Interface File is a Master file.
+
+This is the code to be used by a client to communicate to the service.
+
+#### Structure
+TODO
+
+### The Handlers File
+The Handlers File is a Master file.
+
+This is the code to be used by the express routes to call the specific functions of the service.
+
+#### Structure
+TODO
+
+### The Routes File
+The Routes File is a Slave file.
+
+This is the code for the routes to be directly used by express.
+
+#### Structure
+TODO
+### The Local and Deploy Testing Files
+The Local and Deploy Testing files are Slave files.
+
+These files are created for testing convenience, using the [Rest Client](https://marketplace.visualstudio.com/items?itemName=humao.rest-client) extension of VSCode.
+
+Because as slave fils they are always overwritten, purpose is rather to copy them elsewhere and edit the specifics for testing.
+
+#### Structure
+TODO
 
 # Usage
 Requirements
@@ -66,23 +114,68 @@ Examples
 Current Functionality
 ---------------------
 
-## xxinterface.md parsing
+We do have 3 master files:
+
+- documentation file `xxinterface.md`
+- client interface file `xxinterface.coffee`
+- handlers file `xxhandlers.coffee`
+
+We also have 3 slave files:
+
+- routes file `xxroutes.coffee`
+- local testing file `testinglocal.http`
+- deploy testingfile `testingdeploy.http`
+
+Master files are defining the specific content. Any synchronization mode is only applied to these files.
+The Slave files are always being overwritten by the content resulting from the master files.
+There cannot be any customized content in the slave files.
+
+## General Function
+Parsing all master files to recognize:
+
+- version of the file
+- sections of routes
+- descriptions of a section
+- routes within its section
+- the arguments and the route names
+- the descriptions of the routes
+
+## xxinterface.md parsing 
+TODO
 - takes all the `### /route` parts as route
 - takes the corresponding `#### request` to extract the JSON speficiation, so we know the arguments
-- generates the networkinterface file as `<name>interface.coffee`
-- generates the sciroutes file as `<name>routes.coffee`
-- generates the scihandlers file as `<name>handlers.coffee`
-- generates the deployrequests file as `<name>deploy.http`
-- generates the localrequests file as `<name>local.http`
-- does not overwrite the hanlders! only fills the gaps of missing functions
-- all files will be generated in the same directory as the source file
 
 
 ## xxinterface.coffee parsing
+- lines with `############################################################` 60x`#` are separator lines marking a separate Section
+- sections may have a Section headline as `# ## Title of the Section` straight after the separation line
+- sections may have a Section description consisting of multiple lines essentially being a complete commentBlock like:
+    ```
+    #
+    # some description
+    # other line
+    #
+    ```
+- critical are the structure of function headline and function body they must comply to the following template:
+    ```
+    export {{{routeName}}} = (sciURL, {{{args}}}) ->
+        requestObject = { {{{args}}} }
+        requestURL = sciURL+"/{{{routeName}}}"
+        return postData(requestURL, requestObject)
+    ```
+- also the functions may have a description as a complete commentBlock right above the function headline like:
+    ```
+    #
+    # some description
+    # other line
+    #
+    export {{{routeName}}} = (sciURL, {{{args}}}) ->
+    ```
 
-## xxroutes.coffee parsing
+
 
 ## xxhandlers.coffee parsing
+TODO
 
 
 ## Operation modes
@@ -93,17 +186,19 @@ We know 3 different Operation modes
 - `intersect-cut` or `ic`
 
 ### union - u
-- Essentially every function will be synchronized.
+- Essentially every route will be synchronized. 
 - If there is a function in any of the files which do not exist in the other files, it will be added and synchronized to the other files.
+- If the same route has a different argument or description the content from the newest version will be applied to the others
 
 ### intersect-ignore
 - Here only the functions which exist on all the files will be synchronized.
 - The functions which are missing in one of the files are ignored.
+- If the same route has a different argument or description the content from the newest version will be applied to the others
 
 ### intersect-cut
 - Here only the functions which exist on all the files will be synchronized.
 - The functions which are missing in one of the files are removed.
-
+- If the same route has a different argument or description the content from the newest version will be applied to the others
 
 
 ---

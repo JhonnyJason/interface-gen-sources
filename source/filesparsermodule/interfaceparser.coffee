@@ -38,18 +38,21 @@ functionKey = "export "
 functionCenter = " = (sciURL, "
 functionEnd = ") ->"
 functionBodyLine0Key = '    requestObject = { '
+functionBodyLine0Ending = ' }'
 functionBodyLine1Key = '    requestURL = sciURL+"/'
+functionBodyLine1Ending = '"'
 functionBodyLine2 = "    return postData(requestURL, requestObject)"
 
 #endregion
 
 ############################################################
-#region lineTypes
+#region line and block types
 lineTypes = [
+    # "importLine" # level 1
     "separatorLine" # level 1
+    "sectionHeadComment" # level 2
     "functionHead" # level 2
-    "sectionHeadComment" # level 7
-    "contentLine" # level 7
+    "contentLine" # level 3
     "commentLine" # level 7
     "emptyLine" # level 7
 ]
@@ -130,10 +133,12 @@ export class InterfaceFileParser
             currentBlock = openBlocks[openBlocks.length - 1]
             currentLevel = currentBlock.level
                 
-            # 7 is no specific level - specific levels go to 2 here these are nodes. 7 are leaves.
+            # 7 is no specific level - specific levels are up to 3 here, these are nodes. 7 are leaves.
             if level > currentLevel and level != 7
+                # log "level > currentLevel and level != 7"
                 # the currentBlock is above us so we add the new Block beneath
                 #region addNewBlock()
+                olog currentBlock
                 block = new DocumentBlock(@lineCursor, type, level, currentBlock)
                 currentBlock.add(block)
                 openBlocks.push(block)
@@ -141,6 +146,7 @@ export class InterfaceFileParser
                 #endregion
                 
             else if level != 7
+                # log "level != 7"
                 # the currentBlock is not above us
                 while level <= currentLevel
                     # closing Blocks until we reach one which is above us
@@ -151,6 +157,7 @@ export class InterfaceFileParser
                 currentBlock = openBlocks[openBlocks.length - 1]
                 
                 #region addNewBlock()
+                olog currentBlock
                 block = new DocumentBlock(@lineCursor, type, level, currentBlock)
                 currentBlock.add(block)
                 openBlocks.push(block)
@@ -158,10 +165,27 @@ export class InterfaceFileParser
                 #endregion
             
             else if level == 7
+                # log "level == 7"
+                log currentLevel
                 # create or add Block for content or empty space
                 if currentLevel != 7
                     # initially creating the new block for emptySpaces or content
+    
+                    # We are in function content and reach a leave - then close function Block
+                    if currentLevel == 3
+                        #close content Block - level 3
+                        block = openBlocks.pop()
+                        block.close(@lineCursor)
+                        currentBlock = openBlocks[openBlocks.length - 1]
+                        if currentBlock.type == "functionBlock"
+                            #close function Block - level 2
+                            block = openBlocks.pop()
+                            block.close(@lineCursor)
+                            currentBlock = openBlocks[openBlocks.length - 1]
+
+
                     #region addNewBlock()
+                    olog currentBlock
                     block = new DocumentBlock(@lineCursor, type, level, currentBlock)
                     currentBlock.add(block)
                     openBlocks.push(block)
@@ -176,6 +200,7 @@ export class InterfaceFileParser
                     currentBlock = openBlocks[openBlocks.length - 1]
                     
                     #region addNewBlock()
+                    olog currentBlock
                     block = new DocumentBlock(@lineCursor, type, level, currentBlock)
                     currentBlock.add(block)
                     openBlocks.push(block)
@@ -217,8 +242,8 @@ export class InterfaceFileParser
 
     createCommonStructure: ->
         log "addCreateCommonStructure"
-        idCount = 0
         all = []
+        sectionFunctionMap = Array(@lines.length).fill(null)
 
         # - create the common pieces
         ## Scan for versionHeadline
@@ -235,6 +260,11 @@ export class InterfaceFileParser
             el = @createSectionHead(block)
             @sectionHeads.push(el)
             all.push(el)
+
+            sectionFunctionMap[block.start] = el
+            if el.sectionName? then sectionFunctionMap[block.start+1] = el
+
+
         #function blocks are function headline plus Content
         for block in @functionBlocks
             routeObj = @createRouteObject(block)
@@ -243,30 +273,65 @@ export class InterfaceFileParser
             @functionObjects.push(routeObj.functionObj)
             all.push(routeObj.functionObj)
 
-            olog routeObj
+            # olog routeObj
+            idx = block.start
+            while idx < block.end
+                sectionFunctionMap[idx] = el
+                idx++
 
-        # # comment Blocks
-        # for block in @commentBlocks
-        #     el = @createCommentObject(block)
-        #     continue unless el?
 
-        #     @commentObjects.push(el)
-        #     all.push(el)
+        # comment Blocks
+        for block in @commentBlocks
+            # check if it is description of SectionHead
+            sectionObject = sectionFunctionMap[block.start - 1]
+            if sectionObject? and sectionObject.type == "SectionHead"
+                lines = []
+                idx = block.start
+                end = block.end
 
-        # # emptySpace Blocks
-        # for block in @emptySpaceBlocks
-        #     el = @createEmptySpaceObject(block)
-        #     continue unless el?
+                while idx < end
+                    lines.push(@lines[idx])
+                    idx++
+                
+                sectionObject.setCommentLines(lines)
+                continue
 
-        #     @emptySpaceObjects.push(el)
-        #     all.push(el)
+            # check if it is description of a FunctionObject
+            functionObject = sectionFunctionMap[block.end + 1]
+            if functionObject? and functionObject.type == "FunctionObject"
+                lines = []
+                idx = block.start
+                end = block.end
+
+                while idx < end
+                    lines.push(@lines[idx])
+                    idx++
+                
+                functionObject.setCommentLines(lines)
+                continue
+            
+            # default comment
+            el = @createCommentObject(block)
+            continue unless el?
+
+            @commentObjects.push(el)
+            all.push(el)
+
+        # emptySpace Blocks
+        for block in @emptySpaceBlocks
+            el = @createEmptySpaceObject(block)
+            continue unless el?
+
+            @emptySpaceObjects.push(el)
+            all.push(el)
         
-        # sortComp = (elOne, elTwo) -> elOne.index - elTwo.index
+        # sort by index 
+        sortComp = (elOne, elTwo) -> elOne.index - elTwo.index
+        all.sort(sortComp)
 
-        # all.sort(sortComp)
-
-        # for el in all
-        #     @commonStructure.appendToTail(el.id, el)
+        # create the common structure out of it
+        for el in all
+            @commonStructure.appendToTail(el.id, el)
 
         return
 
@@ -307,7 +372,7 @@ export class InterfaceFileParser
         return new ImportLine()
 
     createSectionHead: (sectionBlock) ->
-        separatorLine = @lineObjects[sectionBlock.start].line
+        separatorLine = @lines[sectionBlock.start]
         if separatorLine.indexOf(separatorLineKey) != 0 then throw new Error("Section Block did not start with saparator line!")
 
         sectionHead = new SectionHead(sectionBlock)
@@ -318,6 +383,7 @@ export class InterfaceFileParser
         return sectionHead
 
     createRouteObject: (functionBlock) ->
+        olog functionBlock
         functionObj = new FunctionObject(functionBlock)
 
         headlineIndex = functionBlock.start
@@ -328,38 +394,33 @@ export class InterfaceFileParser
         bodyEnd = functionBlock.end
         index = bodyStart
         bodyLines = []
-        while index <  bodyEnd    
+        while index <  bodyEnd
             line = @lineObjects[index].line
             if contentDetect.test(line) then bodyLines.push(line)
             index++
         log bodyLines.length
-        if bodyLines.length != 3 then throw new Error("Invalid Function body size!")
+        if bodyLines.length != 3 then throw new Error("Invalid Function body size!\n"+bodyLines.join("\n"))
         functionObj.setBodyLines(bodyLines)
 
         return {functionObj}
         
     createCommentObject: (commentBlock) ->
-        switch contentBlock.parent.type
-            when  "responseBlock", "requestBlock" then return null
+        obj = new CommentObject(commentBlock)
         
-        obj = new CommentObject(contentBlock)
-        
-        contentLines = []
-        index = contentBlock.start
-        while index < contentBlock.end
-            line = @lineObjects[index].line
-            contentLines.push(line)
+        commentLines = []
+        index = commentBlock.start
+        while index < commentBlock.end
+            line = @lines[index]
+            commentLines.push(line)
             index++
         
-        content = contentLines.join("\n")
+        content = commentLines.join("\n")
         obj.setContent(content)
 
         return obj
 
     createEmptySpaceObject: (emptySpaceBlock) ->
-        switch emptySpaceBlock.parent.type
-            when  "responseBlock", "requestBlock" then return null
-            else return new EmptySpaceObject(emptySpaceBlock)
+        return new EmptySpaceObject(emptySpaceBlock)
         
 ############################################################
 #region classDefinitions
@@ -374,7 +435,7 @@ class DocumentBlock
         # to debug
         @parent = null
 
-    close: (end) -> 
+    close: (end) ->
         @end = end
         delete @open
 
@@ -426,20 +487,26 @@ class SectionHead
 
     addHeadline: (@lineObj) ->
         headline = @lineObj.line
-        sectionHeadNamePart = headline.slice(sectionHeadCommentKey+1)
-        @sectionName = sectionHeadNamePart.match(routeDetect)[0]
+        # sectionHeadNamePart = headline.slice(sectionHeadCommentKey+1)
+        # @sectionName = sectionHeadNamePart.match(routeDetect)[0]
+        @sectionName = headline.slice(sectionHeadCommentKey+1)
         @headlineTemplate = headline.replace(@sectionName, "{{{sectionName}}}")
         
-        log headline
-        log @sectionName
-        log @headlineTemplate
+        # log headline
+        # log @sectionName
+        # log @headlineTemplate
          
+    setCommentLines: (lines) ->
+        @commentLines = lines
+        #TODO
+
 FO_count = 0
 class FunctionObject
     constructor: (@blockObj) ->
         @index = @blockObj.start
         @type = "FunctionObject"
         @id = @type+FO_count++
+        @commentBlock = null
     
     setHeadline: (headline) ->
         @headline = headline
@@ -461,9 +528,9 @@ class FunctionObject
             template = template.replace(@args, "{{{args}}}")
             @headlineTemplate = template
             
-            log @routeName
-            log @args
-            log @headlineTemplate
+            # log @routeName
+            # log @args
+            # log @headlineTemplate
 
         catch err then throw new Error("Headline is corrupt!\nheadline="+headline+"\n- "+err.message)
 
@@ -473,16 +540,37 @@ class FunctionObject
         line1 = @bodyLines[1]
         line2 = @bodyLines[2]
         try
-            if line0.indexOf(functionBodyLine0Key) != 0 then throw new Error("Body Line 0 is corrupt!")
-            if line1.indexOf(functionBodyLine1Key) != 0 then throw new Error("Body Line 1 is corrupt!")
-
-
-
+            if line0.indexOf(functionBodyLine0Key) != 0 then throw new Error("Body Line 0 is corrupt! (key)")
+            if line1.indexOf(functionBodyLine1Key) != 0 then throw new Error("Body Line 1 is corrupt! (key)")
             if line2.indexOf(functionBodyLine2) != 0 then throw new Error("Body Line 2 is corrupt!")
-            line2Postfix = line2.slice(functionBodyLine2.length)
-            if contentDetect.test(line2Postfix) then throw new Error("Content after body Line 2 detected!")
+
+            # check body line 0 for corruption
+            line0 = line0.slice(functionBodyLine0Key.length)
+            if line0.indexOf(@args) != 0 then throw new Error("Body Line 0 is corrupt! (args)")
+            line0 = line0.slice(@args.length)
+            if line0.indexOf(functionBodyLine0Ending) != 0 then throw new Error("Body Line 0  is corrupt! (ending)")
+            line0 = line0.slice(functionBodyLine0Ending.length)
+            if contentDetect.test(line0) then throw new Error("Content after body Line 0 detected!")
+
+            #check body line 1 for corruption
+            line1 = line1.slice(functionBodyLine1Key.length)
+            if line1.indexOf(@routeName) != 0 then throw new Error("Body Line 1 is corrupt! (routeName)")
+            line1 = line1.slice(@routeName.length)
+            if line1.indexOf(functionBodyLine1Ending) != 0 then throw new Error("Body Line 1 is corrupt! (ending)")
+            line1 = line1.slice(functionBodyLine1Ending.length)
+            if contentDetect.test(line1) then throw new Error("Content after body Line 1 detected!")
+
+            #check body line 2 for corruption
+            line2 = line2.slice(functionBodyLine2.length)
+            if contentDetect.test(line2) then throw new Error("Content after body Line 2 detected!")
+
+
         catch err then throw new Error("Body of function is corrupt!\nheadline="+@headline+"\n- "+err.message)
         return
+    
+    setCommentLines: (lines) -> 
+        @commentLines = lines
+        #TODO
 
 CO_count = 0
 class CommentObject
@@ -492,13 +580,9 @@ class CommentObject
         @id = @type+CO_count++
         
     setContent: (content) ->
-        lines = content.split("\n")
-        lines = lines.map((line) -> "# "+line)
+        @lines = content.split("\n")
         @content = content
-        @comment = lines.join("\n")
-        
-        log @content
-        log @comment
+        return
 
 ESO_count = 0
 class EmptySpaceObject
@@ -515,7 +599,9 @@ class EmptySpaceObject
 getLineLevel = (lineObj) ->
     switch lineObj.type
         when "separatorLine" then return 1
-        when "functionHead" then return 2
+        # when "separatorLine", "importLine" then return 1
+        when "functionHead", "sectionHeadComment" then return 2
+        when "contentLine" then return 3
         else return 7
     return
 
@@ -526,6 +612,7 @@ getLineType = (line) ->
     if line.indexOf(sectionHeadCommentKey) == 0 then return "sectionHeadComment"
     if line.indexOf(functionKey) == 0 then return "functionHead"    
     if line.indexOf(commentKey) == 0 then return "commentLine"
+    if line.indexOf(importPostLine) == 0 then return "importLine"
 
     return "contentLine"
 
