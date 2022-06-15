@@ -1,7 +1,7 @@
 ############################################################
 #region debug
 import { createLogFunctions } from "thingy-debug"
-{log, olog} = createLogFunctions("interfaceparser")
+{log, olog} = createLogFunctions("handlersparser")
 #endregion
 
 ############################################################
@@ -23,9 +23,6 @@ versionDetect = /v\d+\.\d+\.\d+/
 contentDetect = /\S+/i
 
 ############################################################
-importPostLine = 'import { postData } from "thingy-network-base"' 
-
-############################################################
 separatorLineKey = "#####"
 commentKey = "# "
 
@@ -34,14 +31,14 @@ separatorLine = "############################################################"
 sectionHeadCommentKey = "# ##"
 
 ############################################################
+serviceDefinitionLine = "service = null"
+setServiceLine = "export setService = (serviceToSet) -> service = serviceToSet"
+
+
+############################################################
 functionKey = "export "
-functionCenter = " = (sciURL, "
+functionCenter = " = ("
 functionEnd = ") ->"
-functionBodyLine0Key = '    requestObject = { '
-functionBodyLine0Ending = ' }'
-functionBodyLine1Key = '    requestURL = sciURL+"/'
-functionBodyLine1Ending = '"'
-functionBodyLine2 = "    return postData(requestURL, requestObject)"
 
 #endregion
 
@@ -69,25 +66,16 @@ lineToBlockTypeMap = {
 
 ############################################################
 #region templates
-functionHeadlineTemplate = 'export {{{routeName}}} = (sciURL, {{{args}}}) ->'
-functionBodyLine0Template = '    requestObject = { {{{args}}} }'
-functionBodyLine1Template = '    requestURL = sciURL+"/{{{routeName}}}"'
+functionHeadlineTemplate = 'export {{{routeName}}} = ({{{args}}}) ->'
 
-functionTemplate = """
-    export {{{routeName}}} = (sciURL, {{{args}}}) ->
-        requestObject = { {{{args}}} }
-        requestURL = sciURL+"/{{{routeName}}}"
-        return postData(requestURL, requestObject)
-    """
 #endregion
 
 ############################################################
-export class InterfaceFileParser
+export class HandlersFileParser
     constructor: ->
         try
-            @parsed = false
-            @path = ph.getInterfaceFilePath()
-            log "reading interface file from: "+@path
+            @path = ph.getHandlersFilePath()
+            log "reading handlers file from: "+@path
             @fileString = fs.readFileSync(@path, "utf-8")
             log "constructed InterfaceFileParser"
             @fileExists = true
@@ -115,6 +103,7 @@ export class InterfaceFileParser
             @fileExists = false
 
     parse: ->
+        return
         if !@fileExists then throw new Error("Interface File does not exist!")        
         @lines = @fileString.split("\n")
         @lineCursor = 0
@@ -224,7 +213,6 @@ export class InterfaceFileParser
         # olog @contentBlocks
         # olog @commentBlocks
         # olog @emptySpaceBlocks
-        @parsed = true
         return
     
     ########################################################
@@ -391,10 +379,7 @@ export class InterfaceFileParser
         headlineIndex = functionBlock.start
         headline = @lineObjects[headlineIndex].line
         functionObj.setHeadline(headline)
-        routeName = functionObj.routeName
-        requestArgs = functionObj.args
-        sectionName = functionBlock.parent
-
+        
         bodyStart = headlineIndex + 1
         bodyEnd = functionBlock.end
         index = bodyStart
@@ -407,7 +392,7 @@ export class InterfaceFileParser
         if bodyLines.length != 3 then throw new Error("Invalid Function body size!\n"+bodyLines.join("\n"))
         functionObj.setBodyLines(bodyLines)
 
-        return {routeName, requestArgs, sectionName, functionObj}
+        return {functionObj}
         
     createCommentObject: (commentBlock) ->
         obj = new CommentObject(commentBlock)

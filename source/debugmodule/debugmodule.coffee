@@ -13,5 +13,6 @@ addModulesToDebug({
     # pathhandlermodule: true
     # scifilesmodule: true
     # startupmodule: true
+    structuresyncmodule:  true
     # testingfilesmodule: true
 })  

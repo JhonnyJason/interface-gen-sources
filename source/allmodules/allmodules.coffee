@@ -10,7 +10,7 @@ import * as networkinterfacemodule from "./networkinterfacemodule.js"
 import * as pathhandlermodule from "./pathhandlermodule.js"
 import * as scifilesmodule from "./scifilesmodule.js"
 import * as startupmodule from "./startupmodule.js"
-import * as stateguardianmodule from "./stateguardianmodule.js"
+import * as structuresyncmodule from "./structuresyncmodule.js"
 import * as testingfilesmodule from "./testingfilesmodule.js"
 
 Modules = {
@@ -26,7 +26,7 @@ Modules = {
     pathhandlermodule,
     scifilesmodule,
     startupmodule,
-    stateguardianmodule,
+    structuresyncmodule,
     testingfilesmodule,
 }
 

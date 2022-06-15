@@ -86,6 +86,7 @@ throwErrorOnUsageFail = (extract) ->
 
     if !legalModes[extract.mode] then throw new Error("Usag error: Invalid mode specified!")
     return
+    
 #endregion
 
 ##############################################################

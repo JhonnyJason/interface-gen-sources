@@ -64,6 +64,7 @@ lineToBlockTypeMap = {
 export class DocumentationFileParser
     constructor: ->
         try
+            @parsed = false
             @path = ph.getDocumentationFilePath()
             @fileString = fs.readFileSync(@path, "utf-8")
             log "constructed DocumentationFileParser"
@@ -178,6 +179,7 @@ export class DocumentationFileParser
         # olog @topBlock
         # olog @subSections
         # olog @routeBlocks
+        @parsed = true
         return
     
     ########################################################
@@ -291,12 +293,16 @@ export class DocumentationFileParser
         headlineIndex = routeBlock.start
         headlineObj = @lineObjects[headlineIndex]
         result.headline = new RouteHeadline(headlineObj)
+        result.routeName = result.headline.routeName
+        result.sectionName = routeBlock.parent
         for child in routeBlock.children
             if child.type == "requestBlock" then requestBlock = child
             if child.type == "responseBlock" then responseBlock = child
         try
             result.requestObj = @createRequestObject(requestBlock)
             result.responseObj = @createResponseObject(responseBlock)
+            result.requestArgs = result.requestObj.requestArgs
+            result.sampleResponse = result.responseObj.definitionJson
             return result
         catch err then throw new Error("Error on parsing route "+result.headline.routeName+"\n"+err.message)
     
