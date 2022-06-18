@@ -32,7 +32,52 @@ Rendered as MD this is the Human Readable documentation for the Routes.
 The purpose is that people have an easier time to understand how to use the SCI.
 
 #### Structure
-TODO
+
+##### Version
+We should have a title line like: `# <title-of-the-interface> v0.1.2`
+Everything above this line is basicly remembered but has no meaning to the `interface-gen.
+
+Important is the version in the title this will be used to consider which of the files contains the newest contents. So remember to increase the version in the file where you do an update.
+
+The version is optional and will be created as v0.0.0 if it does not exist. 
+
+##### General Description
+This is the text between the title line and the first section headline. 
+
+It is optional and will not be created if it does not exist.
+
+##### Sections
+A section is identified by the section headline, which is second level headline like: `## <section-title>`
+
+It is optional and will not be createrd if it does not exist.
+
+##### Section Descriptions
+This is the text between the section headline and the route headline.
+
+It is optional and will not be created if it does not exist.
+
+##### Routes
+A Route is identified by a route headline, which is a third level headline like: `### <route-name>`
+
+This is the mandatory part as the routes are the elements which need to be defined and synchronized.
+
+##### Route Descriptions
+This is the text between the route headline and the route request headline.
+
+This is optional and will not be created if it does not exist.
+
+##### Sample Request
+The sample request is identified by a request headline, which is the fourth level headline going exactly like: `#### request`
+All content between the sample request headline and the sample response headline should be within code blocks and be valid hjson.
+
+This is mandatory for the definition of the parameters/arguments.
+
+##### Sample Response
+The sample response is identified by a response headline, which is the fourth level headline going exactly like: `#### reponse`
+
+This is optional and highly recommended to have it in the documentation.
+
+
 
 ### The Interface File
 The Interface File is a Master file.
